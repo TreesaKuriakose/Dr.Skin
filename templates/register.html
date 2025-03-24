@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if user_type == 'doctor' %}Register Doctor{% else %}Register{% endif %} | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-4 mb-4">
+                <div class="card-header bg-primary text-white text-center">
+                    <h2>{% if user_type == 'doctor' %}Register New Doctor{% else %}Register{% endif %}</h2>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Account Information</h4>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ user_form.email.id_for_label }}" class="form-label">Email</label>
+                                    <input type="email" name="{{ user_form.email.html_name }}" id="{{ user_form.email.id_for_label }}" class="form-control {% if user_form.email.errors %}is-invalid{% endif %}" required>
+                                    {% if user_form.email.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ user_form.email.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ user_form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                    <input type="text" name="{{ user_form.first_name.html_name }}" id="{{ user_form.first_name.id_for_label }}" class="form-control {% if user_form.first_name.errors %}is-invalid{% endif %}" required>
+                                    {% if user_form.first_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ user_form.first_name.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                    <input type="text" name="{{ user_form.last_name.html_name }}" id="{{ user_form.last_name.id_for_label }}" class="form-control {% if user_form.last_name.errors %}is-invalid{% endif %}" required>
+                                    {% if user_form.last_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ user_form.last_name.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ user_form.password.id_for_label }}" class="form-label">Password</label>
+                                    <input type="password" name="{{ user_form.password.html_name }}" id="{{ user_form.password.id_for_label }}" class="form-control {% if user_form.password.errors %}is-invalid{% endif %}" required>
+                                    {% if user_form.password.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ user_form.password.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ user_form.confirm_password.id_for_label }}" class="form-label">Confirm Password</label>
+                                    <input type="password" name="{{ user_form.confirm_password.html_name }}" id="{{ user_form.confirm_password.id_for_label }}" class="form-control {% if user_form.confirm_password.errors %}is-invalid{% endif %}" required>
+                                    {% if user_form.confirm_password.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ user_form.confirm_password.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h4 class="mb-3">{% if user_type == 'doctor' %}Doctor{% else %}Personal{% endif %} Information</h4>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ profile_form.full_name.id_for_label }}" class="form-label">Full Name</label>
+                                    <input type="text" name="{{ profile_form.full_name.html_name }}" id="{{ profile_form.full_name.id_for_label }}" class="form-control {% if profile_form.full_name.errors %}is-invalid{% endif %}" required>
+                                    {% if profile_form.full_name.errors %}
+                                        <div class="invalid-feedback">
+                                            {{ profile_form.full_name.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if user_type == 'doctor' %}
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.specialty.id_for_label }}" class="form-label">Specialty</label>
+                                        <input type="text" name="{{ profile_form.specialty.html_name }}" id="{{ profile_form.specialty.id_for_label }}" class="form-control {% if profile_form.specialty.errors %}is-invalid{% endif %}" required>
+                                        {% if profile_form.specialty.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ profile_form.specialty.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Bio</label>
+                                        <textarea name="{{ profile_form.bio.html_name }}" id="{{ profile_form.bio.id_for_label }}" class="form-control {% if profile_form.bio.errors %}is-invalid{% endif %}" rows="5"></textarea>
+                                        {% if profile_form.bio.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ profile_form.bio.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms" required>
+                            <label class="form-check-label" for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                    </form>
+                    
+                    {% if user_type != 'doctor' %}
+                        <hr>
+                        <div class="text-center">
+                            <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

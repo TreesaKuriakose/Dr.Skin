@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Admin Panel</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <img src="https://via.placeholder.com/150" alt="Admin" class="img-fluid rounded-circle">
+                    </div>
+                    <h5>Administrator</h5>
+                    <p>{{ user.email }}</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Menu</h4>
+                </div>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><a href="#" class="text-decoration-none">Dashboard</a></li>
+                    <li class="list-group-item"><a href="{% url 'register_doctor' %}" class="text-decoration-none">Add Doctor</a></li>
+                    <li class="list-group-item"><a href="#" class="text-decoration-none">Manage Users</a></li>
+                    <li class="list-group-item"><a href="#" class="text-decoration-none">Manage Products</a></li>
+                    <li class="list-group-item"><a href="{% url 'password_reset' %}" class="text-decoration-none">Reset Password</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Platform Statistics</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3>0</h3>
+                                <p class="text-muted">Users</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3>0</h3>
+                                <p class="text-muted">Doctors</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3>0</h3>
+                                <p class="text-muted">Consultations</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3>0</h3>
+                                <p class="text-muted">Products</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Doctors</h4>
+                    <a href="{% url 'register_doctor' %}" class="btn btn-light btn-sm">Add Doctor</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Specialty</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="5" class="text-center">No doctors registered yet.</td>
+                                </tr>
+                                <!-- Doctor rows will be displayed here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Recent Activity</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-center">No recent activity to display.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

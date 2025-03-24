@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}GLOWMETER - Skin Analysis by Medical Professionals{% endblock %}
+
+{% block content %}
+<header class="site-header">
+    <div class="container text-center">
+        <h1 class="display-4">Welcome to GLOWMETER</h1>
+        <p class="lead">Personalized skin analysis by medical professionals</p>
+        {% if not user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{% url 'register' %}" class="btn btn-light me-2">Register</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-light">Login</a>
+            </div>
+        {% endif %}
+    </div>
+</header>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">Skin Assessment</h3>
+                    <p class="card-text">Get your skin professionally analyzed through a simple chat-based consultation.</p>
+                    <i class="fas fa-comments fa-3x mb-3 text-primary"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">Professional Doctors</h3>
+                    <p class="card-text">Choose from our list of qualified dermatologists and skin care professionals.</p>
+                    <i class="fas fa-user-md fa-3x mb-3 text-primary"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title">Product Recommendations</h3>
+                    <p class="card-text">Receive personalized product recommendations based on your skin analysis.</p>
+                    <i class="fas fa-pump-medical fa-3x mb-3 text-primary"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-5">
+        <h2 class="text-center mb-4">How It Works</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="card-title">1. Register</h4>
+                        <p class="card-text">Create an account to get started.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="card-title">2. Choose a Doctor</h4>
+                        <p class="card-text">Select from our qualified professionals.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="card-title">3. Consultation</h4>
+                        <p class="card-text">Chat with your doctor about your skin concerns.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h4 class="card-title">4. Get Recommendations</h4>
+                        <p class="card-text">Receive personalized product suggestions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% endblock %} 
