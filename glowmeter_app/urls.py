@@ -11,4 +11,9 @@ urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('edit-profile/', views.edit_profile, name='edit_profile'),
     path('change-password/', views.change_password, name='change_password'),
+    
+    # Consultation URLs
+    path('start-consultation/<int:doctor_id>/', views.start_consultation, name='start_consultation'),
+    path('consultation/<int:consultation_id>/', views.consultation_view, name='consultation'),
+    path('my-consultations/', views.my_consultations, name='my_consultations'),
 ] 

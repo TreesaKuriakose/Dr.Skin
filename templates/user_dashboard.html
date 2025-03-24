@@ -29,7 +29,7 @@
                     <h4 class="mb-0">Menu</h4>
                 </div>
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><a href="#" class="text-decoration-none">My Consultations</a></li>
+                    <li class="list-group-item"><a href="{% url 'my_consultations' %}" class="text-decoration-none">My Consultations</a></li>
                     <li class="list-group-item"><a href="#" class="text-decoration-none">Product Recommendations</a></li>
                     <li class="list-group-item"><a href="#" class="text-decoration-none">Account Settings</a></li>
                     <li class="list-group-item"><a href="{% url 'password_reset' %}" class="text-decoration-none">Reset Password</a></li>
@@ -60,7 +60,7 @@
                                             </div>
                                         </div>
                                         <p>{{ doctor.bio|truncatechars:120 }}</p>
-                                        <a href="#" class="btn btn-primary btn-sm">Start Consultation</a>
+                                        <a href="{% url 'start_consultation' doctor_id=doctor.id %}" class="btn btn-primary btn-sm">Start Consultation</a>
                                     </div>
                                 </div>
                             </div>

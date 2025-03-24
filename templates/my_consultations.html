@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}My Consultations | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">My Consultations</h4>
+                    <a href="{% url 'dashboard' %}" class="btn btn-sm btn-light">Back to Dashboard</a>
+                </div>
+                
+                <div class="card-body">
+                    {% if consultations %}
+                        <div class="list-group">
+                            {% for consultation in consultations %}
+                                <a href="{% url 'consultation' consultation_id=consultation.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        {% if is_doctor %}
+                                            {% if consultation.user.user_profile.profile_picture %}
+                                                <img src="{{ consultation.user.user_profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% else %}
+                                                <img src="https://via.placeholder.com/50" alt="Profile" class="rounded-circle me-3">
+                                            {% endif %}
+                                            <div>
+                                                <h5 class="mb-0">{{ consultation.user.user_profile.full_name }}</h5>
+                                                <small class="text-muted">Started: {{ consultation.started_at|date:"F j, Y" }}</small>
+                                            </div>
+                                        {% else %}
+                                            {% if consultation.doctor.profile_picture %}
+                                                <img src="{{ consultation.doctor.profile_picture.url }}" alt="Profile" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                            {% else %}
+                                                <img src="https://via.placeholder.com/50" alt="Profile" class="rounded-circle me-3">
+                                            {% endif %}
+                                            <div>
+                                                <h5 class="mb-0">Dr. {{ consultation.doctor.full_name }}</h5>
+                                                <small class="text-muted">{{ consultation.doctor.specialty }} • Started: {{ consultation.started_at|date:"F j, Y" }}</small>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if consultation.unread_count > 0 %}
+                                        <span class="badge bg-danger rounded-pill">{{ consultation.unread_count }}</span>
+                                    {% endif %}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-comments fa-4x text-muted mb-3"></i>
+                            <h5>No consultations yet</h5>
+                            <p class="text-muted">
+                                {% if is_doctor %}
+                                    You haven't had any consultations with patients yet.
+                                {% else %}
+                                    You haven't started any consultations with doctors yet.
+                                    <br>
+                                    <a href="{% url 'dashboard' %}" class="btn btn-primary mt-3">Find a Doctor</a>
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Consultation | GLOWMETER{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        height: 500px;
+        overflow-y: auto;
+    }
+    
+    .message {
+        border-radius: 20px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        max-width: 75%;
+    }
+    
+    .user-message {
+        background-color: #dcf8c6;
+        margin-left: auto;
+    }
+    
+    .other-message {
+        background-color: #f1f0f0;
+    }
+    
+    .message-time {
+        font-size: 0.7rem;
+        color: #999;
+        text-align: right;
+        margin-top: 3px;
+    }
+    
+    .chat-input {
+        border-radius: 25px;
+    }
+    
+    .send-button {
+        border-radius: 25px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        {% if is_doctor %}
+                            {% if consultation.user.user_profile.profile_picture %}
+                                <img src="{{ consultation.user.user_profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle me-2">
+                            {% endif %}
+                            <h5 class="mb-0">{{ consultation.user.user_profile.full_name }}</h5>
+                        {% else %}
+                            {% if consultation.doctor.profile_picture %}
+                                <img src="{{ consultation.doctor.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle me-2">
+                            {% endif %}
+                            <h5 class="mb-0">Dr. {{ consultation.doctor.full_name }}</h5>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'my_consultations' %}" class="btn btn-sm btn-light">Back to Consultations</a>
+                </div>
+                
+                <div class="card-body chat-container" id="chatContainer">
+                    {% for message in messages %}
+                        <div class="d-flex flex-column {% if message.sender == request.user %}align-items-end{% endif %}">
+                            <div class="message {% if message.sender == request.user %}user-message{% else %}other-message{% endif %}">
+                                {{ message.content }}
+                                <div class="message-time">
+                                    {{ message.timestamp|date:"g:i A" }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <div class="card-footer">
+                    <form method="post" id="messageForm">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="message" class="form-control chat-input" placeholder="Type a message..." required>
+                            <button type="submit" class="btn btn-primary send-button">
+                                <i class="fas fa-paper-plane"></i> Send
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Scroll to the bottom of the chat container when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        let chatContainer = document.getElementById('chatContainer');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+        
+        // Focus on the message input when page loads
+        document.querySelector('input[name="message"]').focus();
+    });
+</script>
+{% endblock %}

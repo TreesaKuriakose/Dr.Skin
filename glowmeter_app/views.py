@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import User, Doctor, RegularUser
+from .models import User, Doctor, RegularUser, Consultation, Message
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django import forms
 
@@ -228,3 +228,95 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
     
     return render(request, 'change_password.html', {'form': form})
+
+@login_required
+def start_consultation(request, doctor_id):
+    """Start a new consultation with a doctor"""
+    doctor = Doctor.objects.get(id=doctor_id)
+    user = request.user
+    
+    # Check if there's already an active consultation between the user and the doctor
+    existing_consultation = Consultation.objects.filter(
+        user=user, 
+        doctor=doctor, 
+        is_active=True
+    ).first()
+    
+    if existing_consultation:
+        consultation = existing_consultation
+    else:
+        consultation = Consultation.objects.create(
+            user=user,
+            doctor=doctor
+        )
+        # Create first message to start the conversation
+        Message.objects.create(
+            consultation=consultation,
+            sender=user,
+            content=f"Hello Dr. {doctor.full_name}, I would like to start a consultation with you."
+        )
+    
+    return redirect('consultation', consultation_id=consultation.id)
+
+@login_required
+def consultation_view(request, consultation_id):
+    """View a specific consultation"""
+    consultation = Consultation.objects.get(id=consultation_id)
+    user = request.user
+    
+    # Security check: only the user or the doctor involved can view the consultation
+    if user != consultation.user and user != consultation.doctor.user:
+        messages.error(request, "You don't have permission to view this consultation.")
+        return redirect('dashboard')
+    
+    if request.method == 'POST':
+        message_content = request.POST.get('message')
+        if message_content:
+            Message.objects.create(
+                consultation=consultation,
+                sender=user,
+                content=message_content
+            )
+            return redirect('consultation', consultation_id=consultation.id)
+    
+    # Mark all unread messages as read if the viewer is not the sender
+    unread_messages = Message.objects.filter(
+        consultation=consultation,
+        is_read=False
+    ).exclude(sender=user)
+    
+    unread_messages.update(is_read=True)
+    
+    messages_list = Message.objects.filter(consultation=consultation).order_by('timestamp')
+    
+    context = {
+        'consultation': consultation,
+        'messages': messages_list,
+        'is_doctor': user.is_doctor
+    }
+    
+    return render(request, 'consultation.html', context)
+
+@login_required
+def my_consultations(request):
+    """View all consultations for the current user"""
+    user = request.user
+    
+    if user.is_doctor:
+        consultations = Consultation.objects.filter(doctor=user.doctor_profile)
+    else:
+        consultations = Consultation.objects.filter(user=user)
+    
+    # Count unread messages for each consultation
+    for consultation in consultations:
+        consultation.unread_count = Message.objects.filter(
+            consultation=consultation,
+            is_read=False
+        ).exclude(sender=user).count()
+    
+    context = {
+        'consultations': consultations,
+        'is_doctor': user.is_doctor
+    }
+    
+    return render(request, 'my_consultations.html', context)
