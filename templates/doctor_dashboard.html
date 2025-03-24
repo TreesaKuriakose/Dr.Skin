@@ -25,7 +25,7 @@
                         <input class="form-check-input me-2" type="checkbox" id="availability" {% if user.doctor_profile.is_available %}checked{% endif %}>
                         <label class="form-check-label" for="availability">Available for Consultations</label>
                     </div>
-                    <a href="#" class="btn btn-sm btn-outline-primary">Edit Profile</a>
+                    <a href="{% url 'edit_profile' %}" class="btn btn-sm btn-outline-primary">Edit Profile</a>
                 </div>
             </div>
 

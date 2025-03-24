@@ -1,9 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import User, Doctor, RegularUser
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django import forms
 
 class UserRegistrationForm(forms.ModelForm):
@@ -142,3 +142,89 @@ def dashboard(request):
     else:
         doctors = Doctor.objects.filter(is_available=True)
         return render(request, 'user_dashboard.html', {'doctors': doctors})
+
+class UserProfileEditForm(forms.ModelForm):
+    """Form for editing user account information"""
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email')
+
+class RegularUserProfileEditForm(forms.ModelForm):
+    """Form for editing regular user profile information"""
+    class Meta:
+        model = RegularUser
+        fields = ('full_name', 'profile_picture')
+        widgets = {
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
+
+class DoctorProfileEditForm(forms.ModelForm):
+    """Form for editing doctor profile information"""
+    class Meta:
+        model = Doctor
+        fields = ('full_name', 'specialty', 'bio', 'profile_picture', 'is_available')
+        widgets = {
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'rows': 5}),
+        }
+
+@login_required
+def edit_profile(request):
+    """Edit profile view for both users and doctors"""
+    user = request.user
+    
+    if request.method == 'POST':
+        user_form = UserProfileEditForm(request.POST, instance=user)
+        
+        if user.is_doctor:
+            profile_form = DoctorProfileEditForm(
+                request.POST, 
+                request.FILES, 
+                instance=user.doctor_profile
+            )
+        else:
+            profile_form = RegularUserProfileEditForm(
+                request.POST, 
+                request.FILES, 
+                instance=user.user_profile
+            )
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user_form.save()
+            profile_form.save()
+            messages.success(request, "Your profile was successfully updated!")
+            return redirect('dashboard')
+    else:
+        user_form = UserProfileEditForm(instance=user)
+        
+        if user.is_doctor:
+            profile_form = DoctorProfileEditForm(instance=user.doctor_profile)
+        else:
+            profile_form = RegularUserProfileEditForm(instance=user.user_profile)
+    
+    context = {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'is_doctor': user.is_doctor,
+    }
+    
+    return render(request, 'edit_profile.html', context)
+
+@login_required
+def change_password(request):
+    """Change password view"""
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Keep the user logged in
+            update_session_auth_hash(request, user)
+            messages.success(request, "Your password was successfully updated!")
+            return redirect('dashboard')
+        else:
+            for error in form.errors.values():
+                messages.error(request, error)
+    else:
+        form = PasswordChangeForm(request.user)
+    
+    return render(request, 'change_password.html', {'form': form})
