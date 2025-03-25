@@ -16,6 +16,15 @@
         .navbar-brand, .nav-link {
             color: white !important;
         }
+        .nav-link:hover {
+            opacity: 0.8;
+        }
+        button.nav-link {
+            cursor: pointer;
+        }
+        button.nav-link:hover {
+            opacity: 0.8;
+        }
         .site-header {
             background-color: #7952b3;
             color: white;
@@ -55,7 +64,10 @@
                             <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Logout</a>
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link border-0 bg-transparent">Logout</button>
+                            </form>
                         </li>
                     {% else %}
                         <li class="nav-item">
