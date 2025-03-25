@@ -8,24 +8,19 @@
         <div class="col-md-3">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Profile</h4>
+                    <h4 class="mb-0">Doctor Panel</h4>
                 </div>
                 <div class="card-body text-center">
                     <div class="mb-3">
                         {% if user.doctor_profile.profile_picture %}
-                            <img src="{{ user.doctor_profile.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                            <img src="{{ user.doctor_profile.profile_picture.url }}" alt="Doctor" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
                         {% else %}
-                            <img src="https://via.placeholder.com/150" alt="Profile Picture" class="img-fluid rounded-circle">
+                            <img src="https://via.placeholder.com/150" alt="Doctor" class="img-fluid rounded-circle">
                         {% endif %}
                     </div>
                     <h5>Dr. {{ user.doctor_profile.full_name }}</h5>
                     <p class="text-muted">{{ user.doctor_profile.specialty }}</p>
                     <p>{{ user.email }}</p>
-                    <div class="form-check form-switch d-flex justify-content-center mb-2">
-                        <input class="form-check-input me-2" type="checkbox" id="availability" {% if user.doctor_profile.is_available %}checked{% endif %}>
-                        <label class="form-check-label" for="availability">Available for Consultations</label>
-                    </div>
-                    <a href="{% url 'edit_profile' %}" class="btn btn-sm btn-outline-primary">Edit Profile</a>
                 </div>
             </div>
 
@@ -34,68 +29,87 @@
                     <h4 class="mb-0">Menu</h4>
                 </div>
                 <ul class="list-group list-group-flush">
-                    <li class="list-group-item"><a href="{% url 'my_consultations' %}" class="text-decoration-none">My Consultations</a></li>
-                    <li class="list-group-item"><a href="#" class="text-decoration-none">Schedule</a></li>
-                    <li class="list-group-item"><a href="#" class="text-decoration-none">Product Database</a></li>
-                    <li class="list-group-item"><a href="#" class="text-decoration-none">Account Settings</a></li>
-                    <li class="list-group-item"><a href="{% url 'password_reset' %}" class="text-decoration-none">Reset Password</a></li>
+                    <li class="list-group-item"><a href="#" class="text-decoration-none">Dashboard</a></li>
+                    <li class="list-group-item"><a href="{% url 'doctor_patients' %}" class="text-decoration-none">My Patients</a></li>
+                    <li class="list-group-item"><a href="{% url 'view_prescriptions' %}" class="text-decoration-none">Prescriptions</a></li>
+                    <li class="list-group-item"><a href="{% url 'edit_profile' %}" class="text-decoration-none">Edit Profile</a></li>
+                    <li class="list-group-item"><a href="{% url 'change_password' %}" class="text-decoration-none">Change Password</a></li>
                 </ul>
             </div>
         </div>
-        
+
         <div class="col-md-9">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Your Consultations</h4>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Recent Patients</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for consultation in recent_consultations %}
+                                    <a href="#" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ consultation.user.first_name }} {{ consultation.user.last_name }}</h6>
+                                            <small>{{ consultation.started_at|timesince }} ago</small>
+                                        </div>
+                                        <small class="text-muted">Last consultation: {{ consultation.started_at|date:"F j, Y" }}</small>
+                                    </a>
+                                {% empty %}
+                                    <p class="text-center mb-0">No recent patients.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <ul class="nav nav-tabs" id="consultationTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab">Active</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending" type="button" role="tab">Pending</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed" type="button" role="tab">Completed</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content p-3" id="consultationTabsContent">
-                        <div class="tab-pane fade show active" id="active" role="tabpanel">
-                            <p class="text-center">You have no active consultations at the moment.</p>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Recent Prescriptions</h5>
                         </div>
-                        <div class="tab-pane fade" id="pending" role="tabpanel">
-                            <p class="text-center">You have no pending consultation requests.</p>
-                        </div>
-                        <div class="tab-pane fade" id="completed" role="tabpanel">
-                            <p class="text-center">You haven't completed any consultations yet.</p>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for prescription in recent_prescriptions %}
+                                    <a href="{% url 'prescription_detail' prescription.id %}" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ prescription.patient.first_name }} {{ prescription.patient.last_name }}</h6>
+                                            <small>{{ prescription.created_at|timesince }} ago</small>
+                                        </div>
+                                        <small class="text-muted">Prescribed on: {{ prescription.created_at|date:"F j, Y" }}</small>
+                                    </a>
+                                {% empty %}
+                                    <p class="text-center mb-0">No recent prescriptions.</p>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Statistics</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-md-4">
-                            <div class="p-3">
-                                <h3>0</h3>
-                                <p class="text-muted">Completed Consultations</p>
-                            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Quick Actions</h5>
                         </div>
-                        <div class="col-md-4">
-                            <div class="p-3">
-                                <h3>0</h3>
-                                <p class="text-muted">Pending Requests</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="p-3">
-                                <h3>0</h3>
-                                <p class="text-muted">Product Recommendations</p>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <a href="{% url 'doctor_patients' %}" class="btn btn-outline-primary btn-block mb-3 w-100">
+                                        <i class="fas fa-users"></i> View All Patients
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'view_prescriptions' %}" class="btn btn-outline-primary btn-block mb-3 w-100">
+                                        <i class="fas fa-prescription"></i> View All Prescriptions
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="#" class="btn btn-outline-primary btn-block mb-3 w-100">
+                                        <i class="fas fa-calendar-alt"></i> Manage Availability
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>

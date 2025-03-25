@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}My Patients | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">My Patients</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if patients %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for patient in patients %}
+                                        <tr>
+                                            <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+                                            <td>{{ patient.email }}</td>
+                                            <td>
+                                                <a href="{% url 'create_prescription' patient.id %}" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-prescription"></i> Create Prescription
+                                                </a>
+                                                <a href="#" class="btn btn-info btn-sm">
+                                                    <i class="fas fa-history"></i> View History
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-center">No patients found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

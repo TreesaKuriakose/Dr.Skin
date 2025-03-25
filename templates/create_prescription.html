@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Prescription | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Create Prescription for {{ patient.first_name }} {{ patient.last_name }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" id="prescriptionForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="num_items" id="num_items" value="1">
+                        
+                        <div class="mb-4">
+                            <h5>Prescription Notes</h5>
+                            {{ prescription_form.notes }}
+                        </div>
+
+                        <div id="prescription-items">
+                            <h5>Prescribed Products</h5>
+                            <div class="prescription-item mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="form-group">
+                                                    <label>Product</label>
+                                                    {{ item_form.product }}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>Dosage</label>
+                                                    {{ item_form.dosage }}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label>Duration</label>
+                                                    {{ item_form.duration }}
+                                                </div>
+                                            </div>
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button type="button" class="btn btn-danger btn-sm remove-item" style="display: none;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <button type="button" class="btn btn-secondary" id="add-item">
+                                <i class="fas fa-plus"></i> Add Another Product
+                            </button>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Create Prescription</button>
+                            <a href="{% url 'doctor_patients' %}" class="btn btn-outline-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const itemsContainer = document.getElementById('prescription-items');
+    const addItemBtn = document.getElementById('add-item');
+    const numItemsInput = document.getElementById('num_items');
+    let itemCount = 1;
+
+    addItemBtn.addEventListener('click', function() {
+        itemCount++;
+        numItemsInput.value = itemCount;
+        
+        const newItem = document.querySelector('.prescription-item').cloneNode(true);
+        const inputs = newItem.querySelectorAll('input, select');
+        
+        inputs.forEach(input => {
+            const oldName = input.getAttribute('name');
+            if (oldName) {
+                input.setAttribute('name', `item-${itemCount-1}-${oldName}`);
+                input.value = '';
+            }
+        });
+        
+        const removeBtn = newItem.querySelector('.remove-item');
+        removeBtn.style.display = 'block';
+        removeBtn.addEventListener('click', function() {
+            newItem.remove();
+            itemCount--;
+            numItemsInput.value = itemCount;
+            updateRemoveButtons();
+        });
+        
+        itemsContainer.appendChild(newItem);
+        updateRemoveButtons();
+    });
+
+    function updateRemoveButtons() {
+        const removeButtons = document.querySelectorAll('.remove-item');
+        removeButtons.forEach((btn, index) => {
+            if (index === 0 && removeButtons.length === 1) {
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'block';
+            }
+        });
+    }
+});
+</script>
+{% endblock %} 

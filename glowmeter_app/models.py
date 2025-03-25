@@ -38,6 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
+    profile_picture = models.ImageField(upload_to='admins/', null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_doctor = models.BooleanField(default=False)
@@ -94,3 +95,33 @@ class Message(models.Model):
     
     def __str__(self):
         return f"Message from {self.sender.email} at {self.timestamp}"
+
+class Product(models.Model):
+    """Product model for prescriptions"""
+    name = models.CharField(max_length=200)
+    description = models.TextField()
+    usage_instructions = models.TextField()
+    
+    def __str__(self):
+        return self.name
+
+class Prescription(models.Model):
+    """Prescription model for doctor's prescriptions"""
+    doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='prescriptions')
+    patient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='prescriptions')
+    products = models.ManyToManyField(Product, through='PrescriptionItem')
+    created_at = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"Prescription by Dr. {self.doctor.full_name} for {self.patient.email}"
+
+class PrescriptionItem(models.Model):
+    """Individual items in a prescription"""
+    prescription = models.ForeignKey(Prescription, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    dosage = models.CharField(max_length=100)
+    duration = models.CharField(max_length=100)
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.dosage}"

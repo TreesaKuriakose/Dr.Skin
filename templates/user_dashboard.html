@@ -8,19 +8,21 @@
         <div class="col-md-3">
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Profile</h4>
+                    <h4 class="mb-0">User Profile</h4>
                 </div>
                 <div class="card-body text-center">
                     <div class="mb-3">
                         {% if user.user_profile.profile_picture %}
-                            <img src="{{ user.user_profile.profile_picture.url }}" alt="Profile Picture" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                            <img src="{{ user.user_profile.profile_picture.url }}" alt="Profile" class="img-fluid rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
                         {% else %}
-                            <img src="https://via.placeholder.com/150" alt="Profile Picture" class="img-fluid rounded-circle">
+                            <img src="https://via.placeholder.com/150" alt="Profile" class="img-fluid rounded-circle">
                         {% endif %}
                     </div>
-                    <h5>{{ user.user_profile.full_name }}</h5>
+                    <h5>{{ user.first_name }} {{ user.last_name }}</h5>
                     <p>{{ user.email }}</p>
-                    <a href="{% url 'edit_profile' %}" class="btn btn-sm btn-outline-primary">Edit Profile</a>
+                    <a href="{% url 'edit_profile' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-user-edit"></i> Edit Profile
+                    </a>
                 </div>
             </div>
 
@@ -29,56 +31,94 @@
                     <h4 class="mb-0">Menu</h4>
                 </div>
                 <ul class="list-group list-group-flush">
+                    <li class="list-group-item"><a href="#" class="text-decoration-none">Dashboard</a></li>
+                    <li class="list-group-item"><a href="{% url 'view_prescriptions' %}" class="text-decoration-none">My Prescriptions</a></li>
                     <li class="list-group-item"><a href="{% url 'my_consultations' %}" class="text-decoration-none">My Consultations</a></li>
-                    <li class="list-group-item"><a href="#" class="text-decoration-none">Product Recommendations</a></li>
-                    <li class="list-group-item"><a href="#" class="text-decoration-none">Account Settings</a></li>
-                    <li class="list-group-item"><a href="{% url 'password_reset' %}" class="text-decoration-none">Reset Password</a></li>
+                    <li class="list-group-item"><a href="{% url 'edit_profile' %}" class="text-decoration-none">Edit Profile</a></li>
+                    <li class="list-group-item"><a href="{% url 'change_password' %}" class="text-decoration-none">Change Password</a></li>
                 </ul>
             </div>
         </div>
-        
+
         <div class="col-md-9">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Find a Doctor</h4>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        {% for doctor in doctors %}
-                            <div class="col-md-6 mb-4">
-                                <div class="card h-100">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-center mb-3">
-                                            {% if doctor.profile_picture %}
-                                                <img src="{{ doctor.profile_picture.url }}" alt="{{ doctor.full_name }}" class="img-fluid rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
-                                            {% else %}
-                                                <img src="https://via.placeholder.com/60" alt="{{ doctor.full_name }}" class="img-fluid rounded-circle me-3">
-                                            {% endif %}
-                                            <div>
-                                                <h5 class="mb-0">{{ doctor.full_name }}</h5>
-                                                <p class="text-muted mb-0">{{ doctor.specialty }}</p>
-                                            </div>
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Recent Prescriptions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for prescription in recent_prescriptions %}
+                                    <a href="{% url 'prescription_detail' prescription.id %}" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">Dr. {{ prescription.doctor.full_name }}</h6>
+                                            <small>{{ prescription.created_at|timesince }} ago</small>
                                         </div>
-                                        <p>{{ doctor.bio|truncatechars:120 }}</p>
-                                        <a href="{% url 'start_consultation' doctor_id=doctor.id %}" class="btn btn-primary btn-sm">Start Consultation</a>
+                                        <small class="text-muted">Prescribed on: {{ prescription.created_at|date:"F j, Y" }}</small>
+                                    </a>
+                                {% empty %}
+                                    <p class="text-center mb-0">No recent prescriptions.</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Available Doctors</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                {% for doctor in doctors %}
+                                    <div class="list-group-item">
+                                        <div class="d-flex w-100 justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-1">Dr. {{ doctor.full_name }}</h6>
+                                                <small class="text-muted">{{ doctor.specialty }}</small>
+                                            </div>
+                                            <a href="{% url 'start_consultation' doctor.id %}" class="btn btn-primary btn-sm">
+                                                Consult
+                                            </a>
+                                        </div>
                                     </div>
-                                </div>
+                                {% empty %}
+                                    <p class="text-center mb-0">No doctors available at the moment.</p>
+                                {% endfor %}
                             </div>
-                        {% empty %}
-                            <div class="col-12">
-                                <p class="text-center">No doctors available at the moment. Please check back later.</p>
-                            </div>
-                        {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Your Recent Consultations</h4>
-                </div>
-                <div class="card-body">
-                    <p class="text-center">You don't have any consultations yet. Find a doctor to start your skin assessment.</p>
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Quick Actions</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <a href="{% url 'view_prescriptions' %}" class="btn btn-outline-primary btn-block mb-3 w-100">
+                                        <i class="fas fa-prescription"></i> View All Prescriptions
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="{% url 'my_consultations' %}" class="btn btn-outline-primary btn-block mb-3 w-100">
+                                        <i class="fas fa-comments"></i> View All Consultations
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a href="#" class="btn btn-outline-primary btn-block mb-3 w-100">
+                                        <i class="fas fa-shopping-bag"></i> View Recommended Products
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

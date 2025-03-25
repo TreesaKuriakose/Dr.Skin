@@ -19,4 +19,15 @@ urlpatterns = [
     path('start-consultation/<int:doctor_id>/', views.start_consultation, name='start_consultation'),
     path('consultation/<int:consultation_id>/', views.consultation_view, name='consultation'),
     path('my-consultations/', views.my_consultations, name='my_consultations'),
+    
+    # Prescription URLs
+    path('patients/', views.doctor_patients, name='doctor_patients'),
+    path('prescriptions/', views.view_prescriptions, name='view_prescriptions'),
+    path('prescription/<int:prescription_id>/', views.prescription_detail, name='prescription_detail'),
+    path('create-prescription/<int:patient_id>/', views.create_prescription, name='create_prescription'),
+    
+    # Product Management URLs
+    path('manage-products/', views.manage_products, name='manage_products'),
+    path('edit-product/<int:product_id>/', views.edit_product, name='edit_product'),
+    path('delete-product/<int:product_id>/', views.delete_product, name='delete_product'),
 ] 
