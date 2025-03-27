@@ -37,19 +37,23 @@
                                             <div class="col-md-4">
                                                 <div class="form-group">
                                                     <label>Product</label>
-                                                    {{ item_form.product }}
+                                                    <select name="item-0-product" class="form-control">
+                                                        {% for product in products %}
+                                                            <option value="{{ product.id }}">{{ product.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label>Dosage</label>
-                                                    {{ item_form.dosage }}
+                                                    <input type="text" name="item-0-dosage" class="form-control" required>
                                                 </div>
                                             </div>
                                             <div class="col-md-3">
                                                 <div class="form-group">
                                                     <label>Duration</label>
-                                                    {{ item_form.duration }}
+                                                    <input type="text" name="item-0-duration" class="form-control" required>
                                                 </div>
                                             </div>
                                             <div class="col-md-2 d-flex align-items-end">
@@ -100,7 +104,8 @@ document.addEventListener('DOMContentLoaded', function() {
         inputs.forEach(input => {
             const oldName = input.getAttribute('name');
             if (oldName) {
-                input.setAttribute('name', `item-${itemCount-1}-${oldName}`);
+                const fieldType = oldName.split('-')[2]; // Get the field type (product, dosage, duration)
+                input.setAttribute('name', `item-${itemCount-1}-${fieldType}`);
                 input.value = '';
             }
         });

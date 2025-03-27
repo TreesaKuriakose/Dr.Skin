@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
+    <div class="row">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">Edit Product: {{ product.name }}</h4>
@@ -21,18 +21,18 @@
 
                     <form method="post">
                         {% csrf_token %}
-                        {% for field in form %}
-                            <div class="form-group mb-3">
-                                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                    <div class="alert alert-danger mt-2">
-                                        {{ field.errors }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endfor %}
-                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">Product Name</label>
+                            {{ form.name }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="{{ form.usage_instructions.id_for_label }}" class="form-label">Usage Instructions</label>
+                            {{ form.usage_instructions }}
+                        </div>
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">Update Product</button>
                             <a href="{% url 'manage_products' %}" class="btn btn-outline-secondary">Cancel</a>

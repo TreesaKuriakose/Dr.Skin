@@ -456,10 +456,10 @@ def view_prescriptions(request):
     user = request.user
     
     if user.is_doctor:
-        prescriptions = Prescription.objects.filter(doctor=user.doctor_profile)
+        prescriptions = Prescription.objects.filter(doctor=user.doctor_profile).select_related('doctor', 'patient').prefetch_related('prescriptionitem_set', 'prescriptionitem_set__product')
         template = 'doctor_prescriptions.html'
     else:
-        prescriptions = Prescription.objects.filter(patient=user)
+        prescriptions = Prescription.objects.filter(patient=user).select_related('doctor').prefetch_related('prescriptionitem_set', 'prescriptionitem_set__product')
         template = 'user_prescriptions.html'
     
     return render(request, template, {'prescriptions': prescriptions})
@@ -486,10 +486,11 @@ class ProductForm(forms.ModelForm):
     """Form for adding/editing products"""
     class Meta:
         model = Product
-        fields = ('name', 'description')
+        fields = ('name', 'description', 'usage_instructions')
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'usage_instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter detailed instructions for using this product'}),
         }
 
 @login_required
