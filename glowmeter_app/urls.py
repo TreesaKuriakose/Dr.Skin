@@ -26,6 +26,8 @@ urlpatterns = [
     path('prescriptions/', views.view_prescriptions, name='view_prescriptions'),
     path('prescription/<int:prescription_id>/', views.prescription_detail, name='prescription_detail'),
     path('create-prescription/<int:patient_id>/', views.create_prescription, name='create_prescription'),
+    path('manage-availability/', views.manage_availability, name='manage_availability'),
+    path('doctor-availability/<int:doctor_id>/', views.view_doctor_availability, name='doctor_availability'),
     
     # Product Management URLs
     path('manage-products/', views.manage_products, name='manage_products'),

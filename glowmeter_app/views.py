@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import User, Doctor, RegularUser, Consultation, Message, Product, Prescription, PrescriptionItem
+from .models import User, Doctor, RegularUser, Consultation, Message, Product, Prescription, PrescriptionItem, DoctorAvailability
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django import forms
 
@@ -803,3 +803,65 @@ def patient_history(request, patient_id):
     }
     
     return render(request, 'patient_history.html', context)
+
+@login_required
+def manage_availability(request):
+    """View for doctors to manage their availability"""
+    if not request.user.is_doctor:
+        messages.error(request, "Only doctors can manage their availability.")
+        return redirect('dashboard')
+    
+    doctor = request.user.doctor_profile
+    availabilities = DoctorAvailability.objects.filter(doctor=doctor).order_by('day', 'start_time')
+    
+    if request.method == 'POST':
+        # Delete existing availabilities
+        if request.POST.get('action') == 'delete':
+            availability_id = request.POST.get('availability_id')
+            DoctorAvailability.objects.filter(id=availability_id, doctor=doctor).delete()
+            messages.success(request, "Time slot removed successfully!")
+            return redirect('manage_availability')
+        
+        # Add new availability
+        day = request.POST.get('day')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        
+        if day and start_time and end_time:
+            try:
+                DoctorAvailability.objects.create(
+                    doctor=doctor,
+                    day=day,
+                    start_time=start_time,
+                    end_time=end_time
+                )
+                messages.success(request, "Time slot added successfully!")
+            except Exception as e:
+                messages.error(request, "Failed to add time slot. Please check your input.")
+        else:
+            messages.error(request, "Please fill in all fields.")
+        
+        return redirect('manage_availability')
+    
+    context = {
+        'availabilities': availabilities,
+        'days_of_week': DoctorAvailability.DAYS_OF_WEEK
+    }
+    return render(request, 'manage_availability.html', context)
+
+@login_required
+def view_doctor_availability(request, doctor_id):
+    """View for patients to see doctor's availability schedule"""
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    
+    # Get all availability slots for this doctor
+    availabilities = DoctorAvailability.objects.filter(
+        doctor=doctor
+    ).order_by('day', 'start_time')
+    
+    context = {
+        'doctor': doctor,
+        'availabilities': availabilities
+    }
+    
+    return render(request, 'doctor_availability.html', context)
