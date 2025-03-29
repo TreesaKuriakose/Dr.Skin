@@ -4,135 +4,148 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Create Prescription for {{ patient.first_name }} {{ patient.last_name }}</h4>
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Create Prescription for {{ patient.first_name }} {{ patient.last_name }}</h4>
+        </div>
+        <div class="card-body">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" id="prescriptionForm">
+                {% csrf_token %}
+                <input type="hidden" name="num_items" id="numItems" value="1">
+                
+                <div class="mb-4">
+                    <h5>Prescription Notes</h5>
+                    {{ prescription_form.notes }}
                 </div>
-                <div class="card-body">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
 
-                    <form method="post" id="prescriptionForm">
-                        {% csrf_token %}
-                        <input type="hidden" name="num_items" id="num_items" value="1">
-                        
-                        <div class="mb-4">
-                            <h5>Prescription Notes</h5>
-                            {{ prescription_form.notes }}
-                        </div>
-
-                        <div id="prescription-items">
-                            <h5>Prescribed Products</h5>
-                            <div class="prescription-item mb-3">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <div class="form-group">
-                                                    <label>Product</label>
-                                                    <select name="item-0-product" class="form-control">
-                                                        {% for product in products %}
-                                                            <option value="{{ product.id }}">{{ product.name }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label>Dosage</label>
-                                                    <input type="text" name="item-0-dosage" class="form-control" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label>Duration</label>
-                                                    <input type="text" name="item-0-duration" class="form-control" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-2 d-flex align-items-end">
-                                                <button type="button" class="btn btn-danger btn-sm remove-item" style="display: none;">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            </div>
+                <div class="mb-4">
+                    <h5>Prescribed Products</h5>
+                    <div id="productItems">
+                        <div class="product-item card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="form-label">Product</label>
+                                        <select name="item-0-product" class="form-control product-select" required>
+                                            <option value="">Select a product</option>
+                                            {% for product in products %}
+                                                <option value="{{ product.id }}" data-image="{{ product.image.url }}" data-description="{{ product.description }}">{{ product.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Dosage</label>
+                                        <input type="text" name="item-0-dosage" class="form-control" placeholder="e.g., Twice daily" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Duration</label>
+                                        <input type="text" name="item-0-duration" class="form-control" placeholder="e.g., 2 weeks" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label">Usage Instructions</label>
+                                        <textarea name="item-0-instructions" class="form-control" rows="2" placeholder="How to use this product"></textarea>
+                                    </div>
+                                </div>
+                                <div class="product-details mt-3" style="display: none;">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <img src="" alt="Product Image" class="img-fluid product-image" style="max-height: 100px; object-fit: cover;">
+                                        </div>
+                                        <div class="col-md-9">
+                                            <p class="product-description"></p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="mb-3">
-                            <button type="button" class="btn btn-secondary" id="add-item">
-                                <i class="fas fa-plus"></i> Add Another Product
-                            </button>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Create Prescription</button>
-                            <a href="{% url 'doctor_patients' %}" class="btn btn-outline-secondary">Cancel</a>
-                        </div>
-                    </form>
+                    </div>
+                    
+                    <button type="button" class="btn btn-outline-primary" id="addProduct">
+                        <i class="fas fa-plus"></i> Add Another Product
+                    </button>
                 </div>
-            </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">Create Prescription</button>
+                    <a href="{% url 'doctor_patients' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const itemsContainer = document.getElementById('prescription-items');
-    const addItemBtn = document.getElementById('add-item');
-    const numItemsInput = document.getElementById('num_items');
     let itemCount = 1;
-
-    addItemBtn.addEventListener('click', function() {
+    const productItems = document.getElementById('productItems');
+    const numItemsInput = document.getElementById('numItems');
+    
+    // Function to update product details
+    function updateProductDetails(select) {
+        const productDetails = select.closest('.card-body').querySelector('.product-details');
+        const productImage = productDetails.querySelector('.product-image');
+        const productDescription = productDetails.querySelector('.product-description');
+        
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption.value) {
+            const imageUrl = selectedOption.dataset.image;
+            const description = selectedOption.dataset.description;
+            
+            if (imageUrl) {
+                productImage.src = imageUrl;
+                productDetails.style.display = 'block';
+            } else {
+                productImage.src = 'https://via.placeholder.com/150';
+            }
+            
+            productDescription.textContent = description;
+            productDetails.style.display = 'block';
+        } else {
+            productDetails.style.display = 'none';
+        }
+    }
+    
+    // Add event listeners to existing product selects
+    document.querySelectorAll('.product-select').forEach(select => {
+        select.addEventListener('change', function() {
+            updateProductDetails(this);
+        });
+    });
+    
+    // Add new product item
+    document.getElementById('addProduct').addEventListener('click', function() {
+        const newItem = document.querySelector('.product-item').cloneNode(true);
+        
+        // Update names and IDs
+        newItem.querySelectorAll('select, input, textarea').forEach(input => {
+            input.name = input.name.replace('-0-', `-${itemCount}-`);
+            input.value = '';
+        });
+        
+        // Reset product details
+        const productDetails = newItem.querySelector('.product-details');
+        productDetails.style.display = 'none';
+        
+        // Add event listener to new select
+        const newSelect = newItem.querySelector('.product-select');
+        newSelect.addEventListener('change', function() {
+            updateProductDetails(this);
+        });
+        
+        productItems.appendChild(newItem);
         itemCount++;
         numItemsInput.value = itemCount;
-        
-        const newItem = document.querySelector('.prescription-item').cloneNode(true);
-        const inputs = newItem.querySelectorAll('input, select');
-        
-        inputs.forEach(input => {
-            const oldName = input.getAttribute('name');
-            if (oldName) {
-                const fieldType = oldName.split('-')[2]; // Get the field type (product, dosage, duration)
-                input.setAttribute('name', `item-${itemCount-1}-${fieldType}`);
-                input.value = '';
-            }
-        });
-        
-        const removeBtn = newItem.querySelector('.remove-item');
-        removeBtn.style.display = 'block';
-        removeBtn.addEventListener('click', function() {
-            newItem.remove();
-            itemCount--;
-            numItemsInput.value = itemCount;
-            updateRemoveButtons();
-        });
-        
-        itemsContainer.appendChild(newItem);
-        updateRemoveButtons();
     });
-
-    function updateRemoveButtons() {
-        const removeButtons = document.querySelectorAll('.remove-item');
-        removeButtons.forEach((btn, index) => {
-            if (index === 0 && removeButtons.length === 1) {
-                btn.style.display = 'none';
-            } else {
-                btn.style.display = 'block';
-            }
-        });
-    }
 });
 </script>
 {% endblock %} 

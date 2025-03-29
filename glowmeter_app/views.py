@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, update_session_auth_hash
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from .models import User, Doctor, RegularUser, Consultation, Message, Product, Prescription, PrescriptionItem
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
@@ -39,7 +39,14 @@ class DoctorForm(forms.ModelForm):
     """Form for doctor additional details"""
     class Meta:
         model = Doctor
-        fields = ('full_name', 'specialty', 'bio')
+        fields = ('full_name', 'specialty', 'bio', 'profile_picture', 'is_available')
+        widgets = {
+            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'specialty': forms.TextInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
+            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
 def home(request):
     """Home page view"""
@@ -136,18 +143,87 @@ def dashboard(request):
     user = request.user
     
     if user.is_admin:
-        doctors = Doctor.objects.all()
+        # Get counts for statistics
         users_count = User.objects.filter(is_doctor=False, is_admin=False).count()
+        doctors = Doctor.objects.all()
         consultations_count = Consultation.objects.count()
+        products_count = Product.objects.count()
+        
+        # Get recent activities (last 10)
+        recent_activities = []
+        
+        # Recent user registrations
+        recent_users = User.objects.filter(is_doctor=False, is_admin=False).order_by('-date_joined')[:5]
+        for user in recent_users:
+            recent_activities.append({
+                'type': 'registration',
+                'user': user,
+                'timestamp': user.date_joined,
+                'message': f"New user registered: {user.first_name} {user.last_name}"
+            })
+        
+        # Recent consultations - using started_at instead of created_at
+        recent_consultations = Consultation.objects.order_by('-started_at')[:5]
+        for consultation in recent_consultations:
+            recent_activities.append({
+                'type': 'consultation',
+                'user': consultation.user,
+                'timestamp': consultation.started_at,
+                'message': f"New consultation: {consultation.user.first_name} with Dr. {consultation.doctor.full_name}"
+            })
+        
+        # Recent doctor registrations
+        recent_doctors = Doctor.objects.order_by('-user__date_joined')[:5]
+        for doctor in recent_doctors:
+            recent_activities.append({
+                'type': 'doctor',
+                'user': doctor.user,
+                'timestamp': doctor.user.date_joined,
+                'message': f"New doctor registered: Dr. {doctor.full_name}"
+            })
+            
+        # Sort all activities by timestamp, most recent first
+        recent_activities.sort(key=lambda x: x['timestamp'], reverse=True)
+        recent_activities = recent_activities[:10]  # Get only the 10 most recent activities
+        
         context = {
-            'doctors': doctors,
             'users_count': users_count,
+            'doctors': doctors,
             'consultations_count': consultations_count,
-            'products_count': 0  # Add actual products count when implemented
+            'products_count': products_count,
+            'recent_activities': recent_activities,
         }
         return render(request, 'admin_dashboard.html', context)
     elif user.is_doctor:
-        return render(request, 'doctor_dashboard.html')
+        # Get active consultations for the doctor
+        active_consultations = Consultation.objects.filter(
+            doctor=user.doctor_profile,
+            is_active=True
+        ).select_related('user').order_by('-started_at')
+
+        # Get recent consultations
+        recent_consultations = Consultation.objects.filter(
+            doctor=user.doctor_profile
+        ).select_related('user').order_by('-started_at')[:5]
+
+        # Get recent prescriptions
+        recent_prescriptions = Prescription.objects.filter(
+            doctor=user.doctor_profile
+        ).select_related('patient').order_by('-created_at')[:5]
+
+        # Count unread messages
+        for consultation in active_consultations:
+            consultation.unread_count = Message.objects.filter(
+                consultation=consultation,
+                is_read=False
+            ).exclude(sender=user).count()
+
+        context = {
+            'active_consultations': active_consultations,
+            'recent_consultations': recent_consultations,
+            'recent_prescriptions': recent_prescriptions
+        }
+        return render(request, 'doctor_dashboard.html', context)
     else:
         available_doctors = Doctor.objects.filter(is_available=True)
         return render(request, 'user_dashboard.html', {'doctors': available_doctors})
@@ -294,11 +370,11 @@ def start_consultation(request, doctor_id):
 @login_required
 def consultation_view(request, consultation_id):
     """View a specific consultation"""
-    consultation = Consultation.objects.get(id=consultation_id)
+    consultation = get_object_or_404(Consultation, id=consultation_id)
     user = request.user
     
     # Security check: only the user or the doctor involved can view the consultation
-    if user != consultation.user and user != consultation.doctor.user:
+    if user != consultation.user and (not user.is_doctor or user.doctor_profile != consultation.doctor):
         messages.error(request, "You don't have permission to view this consultation.")
         return redirect('dashboard')
     
@@ -308,17 +384,16 @@ def consultation_view(request, consultation_id):
             Message.objects.create(
                 consultation=consultation,
                 sender=user,
-                content=message_content
+                content=message_content,
+                is_read=False
             )
             return redirect('consultation', consultation_id=consultation.id)
     
-    # Mark all unread messages as read if the viewer is not the sender
-    unread_messages = Message.objects.filter(
+    # Mark all unread messages as read for the current user
+    Message.objects.filter(
         consultation=consultation,
         is_read=False
-    ).exclude(sender=user)
-    
-    unread_messages.update(is_read=True)
+    ).exclude(sender=user).update(is_read=True)
     
     messages_list = Message.objects.filter(consultation=consultation).order_by('timestamp')
     
@@ -412,10 +487,6 @@ def create_prescription(request, patient_id):
     
     if request.method == 'POST':
         prescription_form = PrescriptionForm(request.POST)
-        item_forms = []
-        
-        # Get the number of items from the form
-        num_items = int(request.POST.get('num_items', 0))
         
         if prescription_form.is_valid():
             prescription = prescription_form.save(commit=False)
@@ -423,29 +494,32 @@ def create_prescription(request, patient_id):
             prescription.patient = patient
             prescription.save()
             
+            # Get the number of items from the form
+            num_items = int(request.POST.get('num_items', 0))
+            
             # Process each prescription item
             for i in range(num_items):
                 product_id = request.POST.get(f'item-{i}-product')
                 dosage = request.POST.get(f'item-{i}-dosage')
                 duration = request.POST.get(f'item-{i}-duration')
+                instructions = request.POST.get(f'item-{i}-instructions', '')
                 
                 if product_id and dosage and duration:
                     PrescriptionItem.objects.create(
                         prescription=prescription,
                         product_id=product_id,
                         dosage=dosage,
-                        duration=duration
+                        duration=duration,
+                        usage_instructions=instructions
                     )
             
             messages.success(request, "Prescription created successfully!")
             return redirect('doctor_patients')
     else:
         prescription_form = PrescriptionForm()
-        item_form = PrescriptionItemForm()
     
     return render(request, 'create_prescription.html', {
         'prescription_form': prescription_form,
-        'item_form': item_form,
         'patient': patient,
         'products': products
     })
@@ -486,11 +560,11 @@ class ProductForm(forms.ModelForm):
     """Form for adding/editing products"""
     class Meta:
         model = Product
-        fields = ('name', 'description', 'usage_instructions')
+        fields = ('name', 'description', 'image')
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'usage_instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter detailed instructions for using this product'}),
+            'image': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
 @login_required
@@ -501,7 +575,7 @@ def manage_products(request):
         return redirect('dashboard')
     
     if request.method == 'POST':
-        form = ProductForm(request.POST)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             messages.success(request, "Product added successfully!")
@@ -525,7 +599,7 @@ def edit_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
     if request.method == 'POST':
-        form = ProductForm(request.POST, instance=product)
+        form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
             messages.success(request, "Product updated successfully!")
@@ -555,3 +629,177 @@ def delete_product(request, product_id):
     return render(request, 'delete_product.html', {
         'product': product
     })
+
+@login_required
+def view_doctor(request, doctor_id):
+    """View doctor details - admin only"""
+    if not request.user.is_admin:
+        messages.error(request, "Only administrators can view doctor details.")
+        return redirect('dashboard')
+    
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    
+    # Get doctor's statistics
+    patients_count = User.objects.filter(
+        user_consultations__doctor=doctor,
+        user_consultations__is_active=True
+    ).distinct().count()
+    
+    consultations_count = Consultation.objects.filter(doctor=doctor).count()
+    active_consultations = Consultation.objects.filter(doctor=doctor, is_active=True).count()
+    
+    context = {
+        'doctor': doctor,
+        'patients_count': patients_count,
+        'consultations_count': consultations_count,
+        'active_consultations': active_consultations
+    }
+    
+    return render(request, 'view_doctor.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def edit_doctor(request, doctor_id):
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    user = doctor.user
+
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user)
+        doctor_form = DoctorForm(request.POST, request.FILES, instance=doctor)
+        
+        if user_form.is_valid() and doctor_form.is_valid():
+            user = user_form.save()
+            doctor = doctor_form.save(commit=False)
+            doctor.user = user
+            
+            if 'profile_picture' in request.FILES:
+                doctor.profile_picture = request.FILES['profile_picture']
+            
+            doctor.save()
+            messages.success(request, 'Doctor profile updated successfully.')
+            return redirect('view_doctor', doctor_id=doctor.id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        user_form = UserForm(instance=user)
+        doctor_form = DoctorForm(instance=doctor)
+
+    return render(request, 'edit_doctor.html', {
+        'user_form': user_form,
+        'doctor_form': doctor_form,
+        'doctor': doctor
+    })
+
+class UserForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def manage_users(request):
+    """View for admins to manage users"""
+    regular_users = User.objects.filter(is_doctor=False, is_admin=False)
+    
+    context = {
+        'users': regular_users,
+    }
+    return render(request, 'manage_users.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def view_user(request, user_id):
+    """View user details - admin only"""
+    user = get_object_or_404(User, id=user_id)
+    
+    # Get user's statistics
+    consultations_count = Consultation.objects.filter(user=user).count()
+    active_consultations = Consultation.objects.filter(user=user, is_active=True).count()
+    prescriptions_count = Prescription.objects.filter(patient=user).count()
+    
+    context = {
+        'viewed_user': user,
+        'consultations_count': consultations_count,
+        'active_consultations': active_consultations,
+        'prescriptions_count': prescriptions_count,
+    }
+    
+    return render(request, 'view_user.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def edit_user(request, user_id):
+    """Edit user details - admin only"""
+    user = get_object_or_404(User, id=user_id)
+    regular_user = RegularUser.objects.get(user=user)
+    
+    if request.method == 'POST':
+        user_form = UserForm(request.POST, instance=user)
+        profile_form = RegularUserForm(request.POST, request.FILES, instance=regular_user)
+        
+        if user_form.is_valid() and profile_form.is_valid():
+            user = user_form.save()
+            profile = profile_form.save(commit=False)
+            profile.user = user
+            profile.save()
+            
+            messages.success(request, 'User profile updated successfully.')
+            return redirect('view_user', user_id=user.id)
+        else:
+            messages.error(request, 'Please correct the errors below.')
+    else:
+        user_form = UserForm(instance=user)
+        profile_form = RegularUserForm(instance=regular_user)
+
+    return render(request, 'edit_user.html', {
+        'user_form': user_form,
+        'profile_form': profile_form,
+        'viewed_user': user
+    })
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def delete_user(request, user_id):
+    """Delete user - admin only"""
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, 'User deleted successfully.')
+        return redirect('manage_users')
+        
+    return render(request, 'delete_user.html', {'user': user})
+
+@login_required
+def patient_history(request, patient_id):
+    """View patient history - prescriptions and consultations"""
+    if not request.user.is_doctor:
+        messages.error(request, "Only doctors can view patient history.")
+        return redirect('dashboard')
+    
+    patient = get_object_or_404(User, id=patient_id)
+    
+    # Get all prescriptions for this patient by the current doctor
+    prescriptions = Prescription.objects.filter(
+        doctor=request.user.doctor_profile,
+        patient=patient
+    ).order_by('-created_at')
+    
+    # Get all consultations between this patient and the doctor
+    consultations = Consultation.objects.filter(
+        doctor=request.user.doctor_profile,
+        user=patient
+    ).order_by('-started_at')
+    
+    context = {
+        'patient': patient,
+        'prescriptions': prescriptions,
+        'consultations': consultations
+    }
+    
+    return render(request, 'patient_history.html', context)

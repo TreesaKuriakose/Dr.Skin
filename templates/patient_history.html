@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Patient History | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Patient History - {{ patient.first_name }} {{ patient.last_name }}</h4>
+            <a href="{% url 'doctor_patients' %}" class="btn btn-light btn-sm">Back to Patients</a>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h5>Patient Information</h5>
+                    <p><strong>Name:</strong> {{ patient.first_name }} {{ patient.last_name }}</p>
+                    <p><strong>Email:</strong> {{ patient.email }}</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <a href="{% url 'create_prescription' patient.id %}" class="btn btn-primary">
+                        <i class="fas fa-prescription"></i> Create New Prescription
+                    </a>
+                </div>
+            </div>
+
+            <!-- Prescriptions History -->
+            <div class="mb-4">
+                <h5 class="border-bottom pb-2">Prescriptions History</h5>
+                {% if prescriptions %}
+                    <div class="list-group">
+                        {% for prescription in prescriptions %}
+                            <a href="{% url 'prescription_detail' prescription.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Prescription from {{ prescription.created_at|date:"F j, Y" }}</h6>
+                                    <small>{{ prescription.created_at|timesince }} ago</small>
+                                </div>
+                                {% if prescription.notes %}
+                                    <p class="mb-1 text-muted">{{ prescription.notes|truncatechars:100 }}</p>
+                                {% endif %}
+                                <small>
+                                    Products: 
+                                    {% for item in prescription.prescriptionitem_set.all %}
+                                        {{ item.product.name }}{% if not forloop.last %}, {% endif %}
+                                    {% endfor %}
+                                </small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No prescriptions found.</p>
+                {% endif %}
+            </div>
+
+            <!-- Consultations History -->
+            <div>
+                <h5 class="border-bottom pb-2">Consultations History</h5>
+                {% if consultations %}
+                    <div class="list-group">
+                        {% for consultation in consultations %}
+                            <a href="{% url 'consultation' consultation.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">Consultation started {{ consultation.started_at|date:"F j, Y" }}</h6>
+                                    <small>
+                                        {% if consultation.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Closed</span>
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <small>Started {{ consultation.started_at|timesince }} ago</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No consultations found.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

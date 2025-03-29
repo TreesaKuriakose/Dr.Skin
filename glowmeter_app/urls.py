@@ -22,6 +22,7 @@ urlpatterns = [
     
     # Prescription URLs
     path('patients/', views.doctor_patients, name='doctor_patients'),
+    path('patient-history/<int:patient_id>/', views.patient_history, name='patient_history'),
     path('prescriptions/', views.view_prescriptions, name='view_prescriptions'),
     path('prescription/<int:prescription_id>/', views.prescription_detail, name='prescription_detail'),
     path('create-prescription/<int:patient_id>/', views.create_prescription, name='create_prescription'),
@@ -30,4 +31,14 @@ urlpatterns = [
     path('manage-products/', views.manage_products, name='manage_products'),
     path('edit-product/<int:product_id>/', views.edit_product, name='edit_product'),
     path('delete-product/<int:product_id>/', views.delete_product, name='delete_product'),
+    
+    # Doctor Management URLs
+    path('view-doctor/<int:doctor_id>/', views.view_doctor, name='view_doctor'),
+    path('edit-doctor/<int:doctor_id>/', views.edit_doctor, name='edit_doctor'),
+    
+    # User management URLs
+    path('manage-users/', views.manage_users, name='manage_users'),
+    path('view-user/<int:user_id>/', views.view_user, name='view_user'),
+    path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
 ] 

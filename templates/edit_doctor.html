@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Doctor | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Edit Doctor: {{ doctor.full_name }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <h5 class="mb-3">Account Information</h5>
+                        <div class="mb-4">
+                            <div class="mb-3">
+                                <label for="{{ user_form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                {{ user_form.first_name }}
+                                {% if user_form.first_name.errors %}
+                                    <div class="alert alert-danger mt-2">{{ user_form.first_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                {{ user_form.last_name }}
+                                {% if user_form.last_name.errors %}
+                                    <div class="alert alert-danger mt-2">{{ user_form.last_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ user_form.email.id_for_label }}" class="form-label">Email</label>
+                                {{ user_form.email }}
+                                {% if user_form.email.errors %}
+                                    <div class="alert alert-danger mt-2">{{ user_form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <h5 class="mb-3">Doctor Information</h5>
+                        <div class="mb-4">
+                            <div class="mb-3">
+                                <label for="{{ doctor_form.full_name.id_for_label }}" class="form-label">Full Name</label>
+                                {{ doctor_form.full_name }}
+                                {% if doctor_form.full_name.errors %}
+                                    <div class="alert alert-danger mt-2">{{ doctor_form.full_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ doctor_form.specialty.id_for_label }}" class="form-label">Specialty</label>
+                                {{ doctor_form.specialty }}
+                                {% if doctor_form.specialty.errors %}
+                                    <div class="alert alert-danger mt-2">{{ doctor_form.specialty.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ doctor_form.bio.id_for_label }}" class="form-label">Bio</label>
+                                {{ doctor_form.bio }}
+                                {% if doctor_form.bio.errors %}
+                                    <div class="alert alert-danger mt-2">{{ doctor_form.bio.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ doctor_form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
+                                {% if doctor.profile_picture %}
+                                    <div class="mb-2">
+                                        <img src="{{ doctor.profile_picture.url }}" alt="Current profile picture" class="img-thumbnail" style="max-width: 150px;">
+                                    </div>
+                                {% endif %}
+                                {{ doctor_form.profile_picture }}
+                                {% if doctor_form.profile_picture.errors %}
+                                    <div class="alert alert-danger mt-2">{{ doctor_form.profile_picture.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ doctor_form.is_available }}
+                                    <label class="form-check-label" for="{{ doctor_form.is_available.id_for_label }}">
+                                        Available for Consultations
+                                    </label>
+                                </div>
+                                {% if doctor_form.is_available.errors %}
+                                    <div class="alert alert-danger mt-2">{{ doctor_form.is_available.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Update Doctor</button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

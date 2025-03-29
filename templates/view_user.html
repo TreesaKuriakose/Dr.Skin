@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}View User | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">User Details: {{ viewed_user.first_name }} {{ viewed_user.last_name }}</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Personal Information</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Full Name:</th>
+                                    <td>{{ viewed_user.first_name }} {{ viewed_user.last_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ viewed_user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Join Date:</th>
+                                    <td>{{ viewed_user.date_joined|date:"M d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td>
+                                        {% if viewed_user.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Activity Statistics</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Total Consultations:</th>
+                                    <td>{{ consultations_count }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Active Consultations:</th>
+                                    <td>{{ active_consultations }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Total Prescriptions:</th>
+                                    <td>{{ prescriptions_count }}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'edit_user' viewed_user.id %}" class="btn btn-warning">Edit User</a>
+                        <a href="{% url 'delete_user' viewed_user.id %}" class="btn btn-danger">Delete User</a>
+                        <a href="{% url 'manage_users' %}" class="btn btn-secondary">Back to Users List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

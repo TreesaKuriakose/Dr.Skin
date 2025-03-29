@@ -5,8 +5,8 @@
 {% block content %}
 <div class="container mt-4">
     <div class="row">
-        <div class="col-12">
-            <div class="card mb-4">
+        <div class="col-md-4">
+            <div class="card">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">Add New Product</h4>
                 </div>
@@ -19,63 +19,87 @@
                         {% endfor %}
                     {% endif %}
 
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label for="{{ form.name.id_for_label }}" class="form-label">Product Name</label>
                             {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="alert alert-danger mt-2">{{ form.name.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="mb-3">
                             <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
                             {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="alert alert-danger mt-2">{{ form.description.errors }}</div>
+                            {% endif %}
                         </div>
+
                         <div class="mb-3">
-                            <label for="{{ form.usage_instructions.id_for_label }}" class="form-label">Usage Instructions</label>
-                            {{ form.usage_instructions }}
+                            <label for="{{ form.image.id_for_label }}" class="form-label">Product Image</label>
+                            {{ form.image }}
+                            {% if form.image.errors %}
+                                <div class="alert alert-danger mt-2">{{ form.image.errors }}</div>
+                            {% endif %}
                         </div>
-                        <button type="submit" class="btn btn-primary">Add Product</button>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Add Product</button>
+                        </div>
                     </form>
                 </div>
             </div>
+        </div>
 
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Product List</h4>
+                    <h4 class="mb-0">Products List</h4>
                 </div>
                 <div class="card-body">
-                    {% if products %}
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        <th>Description</th>
-                                        <th>Usage Instructions</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for product in products %}
-                                        <tr>
-                                            <td>{{ product.name }}</td>
-                                            <td>{{ product.description|truncatechars:50 }}</td>
-                                            <td>{{ product.usage_instructions|truncatechars:50 }}</td>
-                                            <td>
-                                                <a href="{% url 'edit_product' product.id %}" class="btn btn-warning btn-sm">
-                                                    <i class="fas fa-edit"></i> Edit
-                                                </a>
-                                                <a href="{% url 'delete_product' product.id %}" class="btn btn-danger btn-sm">
-                                                    <i class="fas fa-trash"></i> Delete
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <p class="text-center">No products available.</p>
-                    {% endif %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr>
+                                    <td>
+                                        {% if product.image %}
+                                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-thumbnail" style="max-width: 100px; max-height: 100px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="text-center p-3 bg-light">
+                                                <i class="fas fa-image text-muted"></i>
+                                                <br>
+                                                <small class="text-muted">No image</small>
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ product.name }}</td>
+                                    <td>{{ product.description|truncatewords:20 }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                            <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger">Delete</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No products found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

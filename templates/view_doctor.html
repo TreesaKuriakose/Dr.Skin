@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}View Doctor | GLOWMETER{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Doctor Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-4">
+                            {% if doctor.profile_picture %}
+                                <img src="{{ doctor.profile_picture.url }}" alt="Doctor" class="img-fluid rounded-circle" style="width: 200px; height: 200px; object-fit: cover;">
+                            {% else %}
+                                <img src="https://via.placeholder.com/200" alt="Doctor" class="img-fluid rounded-circle">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h5>Personal Information</h5>
+                            <table class="table">
+                                <tr>
+                                    <th>Name:</th>
+                                    <td>{{ doctor.full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Email:</th>
+                                    <td>{{ doctor.user.email }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Specialty:</th>
+                                    <td>{{ doctor.specialty }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Status:</th>
+                                    <td>
+                                        {% if doctor.is_available %}
+                                            <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Unavailable</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            {% if doctor.bio %}
+                                <h5>Bio</h5>
+                                <p>{{ doctor.bio }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3>{{ patients_count }}</h3>
+                                    <p class="text-muted">Total Patients</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3>{{ consultations_count }}</h3>
+                                    <p class="text-muted">Total Consultations</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body text-center">
+                                    <h3>{{ active_consultations }}</h3>
+                                    <p class="text-muted">Active Consultations</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{% url 'edit_doctor' doctor.id %}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Edit Doctor
+                        </a>
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
