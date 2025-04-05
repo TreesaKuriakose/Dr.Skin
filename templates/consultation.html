@@ -4,9 +4,32 @@
 
 {% block extra_css %}
 <style>
+    body {
+        background-color: #f8f9fa;
+    }
+
+    .chat-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        margin-top: 20px;
+        height: calc(100vh - 120px);
+        padding: 0;
+    }
+    
+    .chat-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        background-color: white;
+        border-radius: 0;
+    }
+    
     .chat-container {
-        height: 500px;
+        flex-grow: 1;
         overflow-y: auto;
+        padding: 20px;
+        background-color: #f8f9fa;
     }
     
     .message {
@@ -14,6 +37,7 @@
         padding: 10px 15px;
         margin-bottom: 10px;
         max-width: 75%;
+        word-wrap: break-word;
     }
     
     .user-message {
@@ -32,67 +56,95 @@
         margin-top: 3px;
     }
     
+    .chat-header {
+        padding: 15px;
+        background-color: #4e73df;
+        color: white;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+    
+    .chat-footer {
+        padding: 15px;
+        background-color: white;
+        border-top: 1px solid #dee2e6;
+    }
+    
     .chat-input {
         border-radius: 25px;
+        padding-right: 100px;
     }
     
     .send-button {
         border-radius: 25px;
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 90px;
+    }
+    
+    .input-group {
+        position: relative;
+    }
+
+    /* Hide any messages that might appear outside the chat container */
+    .container > .message,
+    .container > p,
+    body > .message,
+    body > p {
+        display: none;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <div class="d-flex align-items-center">
-                        {% if is_doctor %}
-                            {% if consultation.user.user_profile.profile_picture %}
-                                <img src="{{ consultation.user.user_profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                            {% else %}
-                                <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle me-2">
-                            {% endif %}
-                            <h5 class="mb-0">{{ consultation.user.user_profile.full_name }}</h5>
-                        {% else %}
-                            {% if consultation.doctor.profile_picture %}
-                                <img src="{{ consultation.doctor.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
-                            {% else %}
-                                <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle me-2">
-                            {% endif %}
-                            <h5 class="mb-0">Dr. {{ consultation.doctor.full_name }}</h5>
-                        {% endif %}
-                    </div>
-                    <a href="{% url 'my_consultations' %}" class="btn btn-sm btn-light">Back to Consultations</a>
-                </div>
-                
-                <div class="card-body chat-container" id="chatContainer">
-                    {% for message in messages %}
-                        <div class="d-flex flex-column {% if message.sender == request.user %}align-items-end{% endif %}">
-                            <div class="message {% if message.sender == request.user %}user-message{% else %}other-message{% endif %}">
-                                {{ message.content }}
-                                <div class="message-time">
-                                    {{ message.timestamp|date:"g:i A" }}
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-                
-                <div class="card-footer">
-                    <form method="post" id="messageForm">
-                        {% csrf_token %}
-                        <div class="input-group">
-                            <input type="text" name="message" class="form-control chat-input" placeholder="Type a message..." required>
-                            <button type="submit" class="btn btn-primary send-button">
-                                <i class="fas fa-paper-plane"></i> Send
-                            </button>
-                        </div>
-                    </form>
-                </div>
+<div class="chat-wrapper">
+    <div class="chat-card">
+        <div class="chat-header d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                {% if is_doctor %}
+                    {% if consultation.user.user_profile.profile_picture %}
+                        <img src="{{ consultation.user.user_profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                    {% else %}
+                        <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle me-2">
+                    {% endif %}
+                    <h5 class="mb-0">{{ consultation.user.user_profile.full_name }}</h5>
+                {% else %}
+                    {% if consultation.doctor.profile_picture %}
+                        <img src="{{ consultation.doctor.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                    {% else %}
+                        <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle me-2">
+                    {% endif %}
+                    <h5 class="mb-0">Dr. {{ consultation.doctor.full_name }}</h5>
+                {% endif %}
             </div>
+            <a href="{% url 'my_consultations' %}" class="btn btn-sm btn-light">Back to Consultations</a>
+        </div>
+        
+        <div class="chat-container" id="chatContainer">
+            {% for message in chat_messages %}
+                <div class="d-flex flex-column {% if message.sender == request.user %}align-items-end{% endif %}">
+                    <div class="message {% if message.sender == request.user %}user-message{% else %}other-message{% endif %}">
+                        {{ message.content }}
+                        <div class="message-time">
+                            {{ message.timestamp|date:"g:i A, M j" }}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="chat-footer">
+            <form method="post" id="messageForm">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input type="text" name="message" class="form-control chat-input" placeholder="Type a message..." required>
+                    <button type="submit" class="btn btn-primary send-button">
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

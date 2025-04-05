@@ -362,7 +362,7 @@ def start_consultation(request, doctor_id):
         Message.objects.create(
             consultation=consultation,
             sender=user,
-            content=f"Hello Dr. {doctor.full_name}, I would like to start a consultation with you."
+            content="Hello Dr. {}, I would like to start a consultation with you.".format(doctor.full_name)
         )
     
     return redirect('consultation', consultation_id=consultation.id)
@@ -395,11 +395,11 @@ def consultation_view(request, consultation_id):
         is_read=False
     ).exclude(sender=user).update(is_read=True)
     
-    messages_list = Message.objects.filter(consultation=consultation).order_by('timestamp')
+    chat_messages = Message.objects.filter(consultation=consultation).order_by('timestamp')
     
     context = {
         'consultation': consultation,
-        'messages': messages_list,
+        'chat_messages': chat_messages,
         'is_doctor': user.is_doctor
     }
     
