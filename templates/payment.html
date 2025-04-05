@@ -32,6 +32,17 @@
     .gpay-button img {
         height: 20px;
     }
+    .upi-help {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .invalid-feedback {
+        display: none;
+    }
+    .was-validated .form-control:invalid ~ .invalid-feedback {
+        display: block;
+    }
 </style>
 {% endblock %}
 
@@ -55,15 +66,24 @@
                 </small>
             </div>
 
-            <form id="payment-form" method="POST">
+            <form id="payment-form" method="POST" class="needs-validation" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
                 <input type="hidden" name="amount" value="{{ doctor.consultation_fee }}">
                 
                 <div class="mb-3">
-                    <label class="form-label">GPay ID / UPI ID / Phone Number</label>
+                    <label class="form-label">UPI ID</label>
                     <input type="text" class="form-control" name="gpay_id" required 
-                           placeholder="Enter your GPay ID or UPI ID">
+                           pattern="^[a-zA-Z0-9._-]+@[a-zA-Z]{3,}$"
+                           placeholder="Enter your UPI ID (e.g., username@upi)"
+                           title="Please enter a valid UPI ID (e.g., username@upi)">
+                    <div class="invalid-feedback">
+                        Please enter a valid UPI ID in the format: username@upi
+                    </div>
+                    <div class="upi-help">
+                        <i class="fas fa-info-circle"></i> 
+                        UPI ID format: username@upi (e.g., john.doe@okicici, sarah@ybl)
+                    </div>
                 </div>
 
                 <button type="submit" class="gpay-button">
@@ -80,6 +100,14 @@
 <script>
 document.getElementById('payment-form').addEventListener('submit', function(e) {
     e.preventDefault();
+    
+    // Validate form
+    if (!this.checkValidity()) {
+        e.stopPropagation();
+        this.classList.add('was-validated');
+        return;
+    }
+    
     // Show loading state
     const button = this.querySelector('button[type="submit"]');
     button.disabled = true;
@@ -87,6 +115,17 @@ document.getElementById('payment-form').addEventListener('submit', function(e) {
     
     // Submit the form
     this.submit();
+});
+
+// Add real-time validation
+const upiInput = document.querySelector('input[name="gpay_id"]');
+upiInput.addEventListener('input', function() {
+    const upiPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z]{3,}$/;
+    if (upiPattern.test(this.value)) {
+        this.setCustomValidity('');
+    } else {
+        this.setCustomValidity('Please enter a valid UPI ID (e.g., username@upi)');
+    }
 });
 </script>
 {% endblock %}

@@ -6,6 +6,7 @@ from .models import User, Doctor, RegularUser, Consultation, Message, Product, P
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django import forms
 import time
+import re
 
 class UserRegistrationForm(forms.ModelForm):
     """Form for user registration"""
@@ -411,6 +412,12 @@ def payment_view(request, doctor_id):
     
     if request.method == 'POST':
         gpay_id = request.POST.get('gpay_id')
+        
+        # Validate UPI ID format
+        upi_pattern = r'^[a-zA-Z0-9._-]+@[a-zA-Z]{3,}$'
+        if not re.match(upi_pattern, gpay_id):
+            messages.error(request, "Please enter a valid UPI ID (e.g., username@upi)")
+            return render(request, 'payment.html', {'doctor': doctor})
         
         # Create new consultation
         consultation = Consultation.objects.create(
