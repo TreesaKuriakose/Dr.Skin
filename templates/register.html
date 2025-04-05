@@ -72,33 +72,73 @@
                             <div class="col-md-6">
                                 <h4 class="mb-3">{% if user_type == 'doctor' %}Doctor{% else %}Personal{% endif %} Information</h4>
                                 
-                                <div class="mb-3">
-                                    <label for="{{ profile_form.full_name.id_for_label }}" class="form-label">Full Name</label>
-                                    <input type="text" name="{{ profile_form.full_name.html_name }}" id="{{ profile_form.full_name.id_for_label }}" class="form-control {% if profile_form.full_name.errors %}is-invalid{% endif %}" required>
-                                    {% if profile_form.full_name.errors %}
-                                        <div class="invalid-feedback">
-                                            {{ profile_form.full_name.errors }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
                                 {% if user_type == 'doctor' %}
                                     <div class="mb-3">
-                                        <label for="{{ profile_form.specialty.id_for_label }}" class="form-label">Specialty</label>
-                                        <input type="text" name="{{ profile_form.specialty.html_name }}" id="{{ profile_form.specialty.id_for_label }}" class="form-control {% if profile_form.specialty.errors %}is-invalid{% endif %}" required>
-                                        {% if profile_form.specialty.errors %}
+                                        <label for="{{ profile_form.specialization.id_for_label }}" class="form-label">Specialization</label>
+                                        <input type="text" name="{{ profile_form.specialization.html_name }}" id="{{ profile_form.specialization.id_for_label }}" class="form-control {% if profile_form.specialization.errors %}is-invalid{% endif %}" required>
+                                        {% if profile_form.specialization.errors %}
                                             <div class="invalid-feedback">
-                                                {{ profile_form.specialty.errors }}
+                                                {{ profile_form.specialization.errors }}
                                             </div>
                                         {% endif %}
                                     </div>
-                                    
+
                                     <div class="mb-3">
-                                        <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Bio</label>
-                                        <textarea name="{{ profile_form.bio.html_name }}" id="{{ profile_form.bio.id_for_label }}" class="form-control {% if profile_form.bio.errors %}is-invalid{% endif %}" rows="5"></textarea>
-                                        {% if profile_form.bio.errors %}
+                                        <label for="{{ profile_form.qualification.id_for_label }}" class="form-label">Qualification</label>
+                                        <input type="text" name="{{ profile_form.qualification.html_name }}" id="{{ profile_form.qualification.id_for_label }}" class="form-control {% if profile_form.qualification.errors %}is-invalid{% endif %}" required>
+                                        {% if profile_form.qualification.errors %}
                                             <div class="invalid-feedback">
-                                                {{ profile_form.bio.errors }}
+                                                {{ profile_form.qualification.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.experience_years.id_for_label }}" class="form-label">Years of Experience</label>
+                                        <input type="number" name="{{ profile_form.experience_years.html_name }}" id="{{ profile_form.experience_years.id_for_label }}" class="form-control {% if profile_form.experience_years.errors %}is-invalid{% endif %}" min="0" required>
+                                        {% if profile_form.experience_years.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ profile_form.experience_years.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.consultation_fee.id_for_label }}" class="form-label">Consultation Fee</label>
+                                        <input type="number" name="{{ profile_form.consultation_fee.html_name }}" id="{{ profile_form.consultation_fee.id_for_label }}" class="form-control {% if profile_form.consultation_fee.errors %}is-invalid{% endif %}" min="0" step="0.01" required>
+                                        {% if profile_form.consultation_fee.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ profile_form.consultation_fee.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.gpay_id.id_for_label }}" class="form-label">GPay ID</label>
+                                        <input type="text" name="{{ profile_form.gpay_id.html_name }}" id="{{ profile_form.gpay_id.id_for_label }}" class="form-control {% if profile_form.gpay_id.errors %}is-invalid{% endif %}" required>
+                                        {% if profile_form.gpay_id.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ profile_form.gpay_id.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" name="{{ profile_form.is_available.html_name }}" id="{{ profile_form.is_available.id_for_label }}" class="form-check-input {% if profile_form.is_available.errors %}is-invalid{% endif %}">
+                                        <label class="form-check-label" for="{{ profile_form.is_available.id_for_label }}">Available for Consultations</label>
+                                        {% if profile_form.is_available.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ profile_form.is_available.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="mb-3">
+                                        <label for="{{ profile_form.full_name.id_for_label }}" class="form-label">Full Name</label>
+                                        <input type="text" name="{{ profile_form.full_name.html_name }}" id="{{ profile_form.full_name.id_for_label }}" class="form-control {% if profile_form.full_name.errors %}is-invalid{% endif %}" required>
+                                        {% if profile_form.full_name.errors %}
+                                            <div class="invalid-feedback">
+                                                {{ profile_form.full_name.errors }}
                                             </div>
                                         {% endif %}
                                     </div>

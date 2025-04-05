@@ -1,103 +1,117 @@
 {% extends 'base.html' %}
 
-{% block title %}Edit Doctor | GLOWMETER{% endblock %}
+{% block title %}Edit Doctor Profile | GLOWMETER{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card mt-4 mb-4">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Edit Doctor: {{ doctor.full_name }}</h4>
+                    <h2 class="mb-0">Edit Doctor Profile</h2>
                 </div>
                 <div class="card-body">
-                    {% if messages %}
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         
-                        <h5 class="mb-3">Account Information</h5>
-                        <div class="mb-4">
-                            <div class="mb-3">
-                                <label for="{{ user_form.first_name.id_for_label }}" class="form-label">First Name</label>
-                                {{ user_form.first_name }}
-                                {% if user_form.first_name.errors %}
-                                    <div class="alert alert-danger mt-2">{{ user_form.first_name.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="mb-3">
-                                <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Last Name</label>
-                                {{ user_form.last_name }}
-                                {% if user_form.last_name.errors %}
-                                    <div class="alert alert-danger mt-2">{{ user_form.last_name.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="mb-3">
-                                <label for="{{ user_form.email.id_for_label }}" class="form-label">Email</label>
-                                {{ user_form.email }}
-                                {% if user_form.email.errors %}
-                                    <div class="alert alert-danger mt-2">{{ user_form.email.errors }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <h5 class="mb-3">Doctor Information</h5>
-                        <div class="mb-4">
-                            <div class="mb-3">
-                                <label for="{{ doctor_form.full_name.id_for_label }}" class="form-label">Full Name</label>
-                                {{ doctor_form.full_name }}
-                                {% if doctor_form.full_name.errors %}
-                                    <div class="alert alert-danger mt-2">{{ doctor_form.full_name.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="mb-3">
-                                <label for="{{ doctor_form.specialty.id_for_label }}" class="form-label">Specialty</label>
-                                {{ doctor_form.specialty }}
-                                {% if doctor_form.specialty.errors %}
-                                    <div class="alert alert-danger mt-2">{{ doctor_form.specialty.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="mb-3">
-                                <label for="{{ doctor_form.bio.id_for_label }}" class="form-label">Bio</label>
-                                {{ doctor_form.bio }}
-                                {% if doctor_form.bio.errors %}
-                                    <div class="alert alert-danger mt-2">{{ doctor_form.bio.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="mb-3">
-                                <label for="{{ doctor_form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
-                                {% if doctor.profile_picture %}
-                                    <div class="mb-2">
-                                        <img src="{{ doctor.profile_picture.url }}" alt="Current profile picture" class="img-thumbnail" style="max-width: 150px;">
-                                    </div>
-                                {% endif %}
-                                {{ doctor_form.profile_picture }}
-                                {% if doctor_form.profile_picture.errors %}
-                                    <div class="alert alert-danger mt-2">{{ doctor_form.profile_picture.errors }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    {{ doctor_form.is_available }}
-                                    <label class="form-check-label" for="{{ doctor_form.is_available.id_for_label }}">
-                                        Available for Consultations
-                                    </label>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Account Information</h4>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ user_form.email.id_for_label }}" class="form-label">Email</label>
+                                    <input type="email" name="{{ user_form.email.html_name }}" id="{{ user_form.email.id_for_label }}" value="{{ user_form.email.value|default:'' }}" class="form-control {% if user_form.email.errors %}is-invalid{% endif %}" required>
+                                    {% if user_form.email.errors %}
+                                        <div class="invalid-feedback">{{ user_form.email.errors }}</div>
+                                    {% endif %}
                                 </div>
-                                {% if doctor_form.is_available.errors %}
-                                    <div class="alert alert-danger mt-2">{{ doctor_form.is_available.errors }}</div>
-                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ user_form.first_name.id_for_label }}" class="form-label">First Name</label>
+                                    <input type="text" name="{{ user_form.first_name.html_name }}" id="{{ user_form.first_name.id_for_label }}" value="{{ user_form.first_name.value|default:'' }}" class="form-control {% if user_form.first_name.errors %}is-invalid{% endif %}" required>
+                                    {% if user_form.first_name.errors %}
+                                        <div class="invalid-feedback">{{ user_form.first_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                                    <input type="text" name="{{ user_form.last_name.html_name }}" id="{{ user_form.last_name.id_for_label }}" value="{{ user_form.last_name.value|default:'' }}" class="form-control {% if user_form.last_name.errors %}is-invalid{% endif %}" required>
+                                    {% if user_form.last_name.errors %}
+                                        <div class="invalid-feedback">{{ user_form.last_name.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h4 class="mb-3">Doctor Information</h4>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ doctor_form.profile_picture.id_for_label }}" class="form-label">Profile Picture</label>
+                                    <div class="mb-2">
+                                        {% if doctor.profile_picture %}
+                                            <img src="{{ doctor.profile_picture.url }}" alt="Current profile picture" class="img-thumbnail" style="max-width: 150px;">
+                                        {% endif %}
+                                    </div>
+                                    <input type="file" name="{{ doctor_form.profile_picture.html_name }}" id="{{ doctor_form.profile_picture.id_for_label }}" class="form-control {% if doctor_form.profile_picture.errors %}is-invalid{% endif %}">
+                                    {% if doctor_form.profile_picture.errors %}
+                                        <div class="invalid-feedback">{{ doctor_form.profile_picture.errors }}</div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ doctor_form.specialization.id_for_label }}" class="form-label">Specialization</label>
+                                    <input type="text" name="{{ doctor_form.specialization.html_name }}" id="{{ doctor_form.specialization.id_for_label }}" value="{{ doctor_form.specialization.value|default:'' }}" class="form-control {% if doctor_form.specialization.errors %}is-invalid{% endif %}" required>
+                                    {% if doctor_form.specialization.errors %}
+                                        <div class="invalid-feedback">{{ doctor_form.specialization.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ doctor_form.qualification.id_for_label }}" class="form-label">Qualification</label>
+                                    <input type="text" name="{{ doctor_form.qualification.html_name }}" id="{{ doctor_form.qualification.id_for_label }}" value="{{ doctor_form.qualification.value|default:'' }}" class="form-control {% if doctor_form.qualification.errors %}is-invalid{% endif %}" required>
+                                    {% if doctor_form.qualification.errors %}
+                                        <div class="invalid-feedback">{{ doctor_form.qualification.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ doctor_form.experience_years.id_for_label }}" class="form-label">Years of Experience</label>
+                                    <input type="number" name="{{ doctor_form.experience_years.html_name }}" id="{{ doctor_form.experience_years.id_for_label }}" value="{{ doctor_form.experience_years.value|default:'' }}" class="form-control {% if doctor_form.experience_years.errors %}is-invalid{% endif %}" min="0" required>
+                                    {% if doctor_form.experience_years.errors %}
+                                        <div class="invalid-feedback">{{ doctor_form.experience_years.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ doctor_form.consultation_fee.id_for_label }}" class="form-label">Consultation Fee</label>
+                                    <input type="number" name="{{ doctor_form.consultation_fee.html_name }}" id="{{ doctor_form.consultation_fee.id_for_label }}" value="{{ doctor_form.consultation_fee.value|default:'' }}" class="form-control {% if doctor_form.consultation_fee.errors %}is-invalid{% endif %}" min="0" step="0.01" required>
+                                    {% if doctor_form.consultation_fee.errors %}
+                                        <div class="invalid-feedback">{{ doctor_form.consultation_fee.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="{{ doctor_form.gpay_id.id_for_label }}" class="form-label">GPay ID</label>
+                                    <input type="text" name="{{ doctor_form.gpay_id.html_name }}" id="{{ doctor_form.gpay_id.id_for_label }}" value="{{ doctor_form.gpay_id.value|default:'' }}" class="form-control {% if doctor_form.gpay_id.errors %}is-invalid{% endif %}" required>
+                                    {% if doctor_form.gpay_id.errors %}
+                                        <div class="invalid-feedback">{{ doctor_form.gpay_id.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="mb-3 form-check">
+                                    <input type="checkbox" name="{{ doctor_form.is_available.html_name }}" id="{{ doctor_form.is_available.id_for_label }}" {% if doctor_form.is_available.value %}checked{% endif %} class="form-check-input {% if doctor_form.is_available.errors %}is-invalid{% endif %}">
+                                    <label class="form-check-label" for="{{ doctor_form.is_available.id_for_label }}">Available for Consultations</label>
+                                    {% if doctor_form.is_available.errors %}
+                                        <div class="invalid-feedback">{{ doctor_form.is_available.errors }}</div>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Update Doctor</button>
-                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+                        
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="{% url 'view_doctor' doctor.id %}" class="btn btn-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>

@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment | GLOWMETER{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-card {
+        max-width: 500px;
+        margin: 40px auto;
+    }
+    .doctor-info {
+        padding: 20px;
+        border-bottom: 1px solid #eee;
+    }
+    .payment-info {
+        padding: 20px;
+    }
+    .gpay-button {
+        background-color: #000;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .gpay-button img {
+        height: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card payment-card">
+        <div class="doctor-info">
+            <h4>Consultation Payment</h4>
+            <p class="mb-1">Doctor: {{ doctor.full_name }}</p>
+            <p class="mb-1">Specialization: {{ doctor.specialization }}</p>
+            <p class="mb-0">Consultation Fee: ₹{{ doctor.consultation_fee }}</p>
+        </div>
+        <div class="payment-info">
+            <h5>Payment Details</h5>
+            <p>Please complete the payment to start your consultation.</p>
+            
+            <div class="alert alert-info">
+                <small>
+                    <i class="fas fa-info-circle"></i>
+                    Payment will be processed through Google Pay
+                </small>
+            </div>
+
+            <form id="payment-form" method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="doctor_id" value="{{ doctor.id }}">
+                <input type="hidden" name="amount" value="{{ doctor.consultation_fee }}">
+                
+                <div class="mb-3">
+                    <label class="form-label">GPay ID / UPI ID / Phone Number</label>
+                    <input type="text" class="form-control" name="gpay_id" required 
+                           placeholder="Enter your GPay ID or UPI ID">
+                </div>
+
+                <button type="submit" class="gpay-button">
+                    <img src="https://developers.google.com/pay/api/images/brand-guidelines/google-pay-mark.png" 
+                         alt="Google Pay">
+                    Pay ₹{{ doctor.consultation_fee }}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.getElementById('payment-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Show loading state
+    const button = this.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    // Submit the form
+    this.submit();
+});
+</script>
+{% endblock %}
+{% endblock %} 

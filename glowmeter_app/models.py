@@ -54,13 +54,20 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 class Doctor(models.Model):
-    """Doctor model linked to User model."""
+    """Doctor model extending User model"""
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='doctor_profile')
-    full_name = models.CharField(max_length=100)
-    specialty = models.CharField(max_length=100)
-    bio = models.TextField()
     profile_picture = models.ImageField(upload_to='doctors/', null=True, blank=True)
+    specialization = models.CharField(max_length=100, default='General')
+    qualification = models.CharField(max_length=200, default='MBBS')
+    experience_years = models.IntegerField(default=0)
     is_available = models.BooleanField(default=True)
+    consultation_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    gpay_id = models.CharField(max_length=100, blank=True)
+    
+    @property
+    def full_name(self):
+        """Return the doctor's full name"""
+        return f"Dr. {self.user.first_name} {self.user.last_name}".strip()
     
     def __str__(self):
         return self.full_name
@@ -153,3 +160,22 @@ class DoctorAvailability(models.Model):
     
     def __str__(self):
         return f"{self.doctor.full_name} - {self.day} ({self.start_time} - {self.end_time})"
+
+class Payment(models.Model):
+    """Payment model for consultation fees"""
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed')
+    ]
+    
+    consultation = models.OneToOneField(Consultation, on_delete=models.CASCADE, related_name='payment')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    transaction_id = models.CharField(max_length=100, blank=True)
+    gpay_transaction_id = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"Payment for consultation {self.consultation.id} - {self.status}"

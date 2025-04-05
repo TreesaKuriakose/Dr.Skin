@@ -2,18 +2,24 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import User, Doctor, RegularUser, Consultation, Message, Product, Prescription, PrescriptionItem, DoctorAvailability
+from .models import User, Doctor, RegularUser, Consultation, Message, Product, Prescription, PrescriptionItem, DoctorAvailability, Payment
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django import forms
+import time
 
 class UserRegistrationForm(forms.ModelForm):
     """Form for user registration"""
-    password = forms.CharField(widget=forms.PasswordInput)
-    confirm_password = forms.CharField(widget=forms.PasswordInput)
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm Password'}))
     
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name')
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
+        }
     
     def clean_confirm_password(self):
         password = self.cleaned_data.get('password')
@@ -36,17 +42,36 @@ class RegularUserForm(forms.ModelForm):
         fields = ('full_name',)
 
 class DoctorForm(forms.ModelForm):
-    """Form for doctor additional details"""
+    """Form for doctor registration"""
     class Meta:
         model = Doctor
-        fields = ('full_name', 'specialty', 'bio', 'profile_picture', 'is_available')
+        fields = ('profile_picture', 'specialization', 'qualification', 'experience_years', 'consultation_fee', 'gpay_id', 'is_available')
         widgets = {
-            'full_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'specialty': forms.TextInput(attrs={'class': 'form-control'}),
-            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
-            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'specialization': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Specialization'}),
+            'qualification': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Qualification'}),
+            'experience_years': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'placeholder': 'Years of Experience'}),
+            'consultation_fee': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01', 'placeholder': 'Consultation Fee'}),
+            'gpay_id': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'GPay ID'}),
+            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
+
+    def clean_experience_years(self):
+        years = self.cleaned_data.get('experience_years')
+        if years is not None and years < 0:
+            raise forms.ValidationError("Experience years cannot be negative")
+        return years
+
+    def clean_consultation_fee(self):
+        fee = self.cleaned_data.get('consultation_fee')
+        if fee is not None and fee < 0:
+            raise forms.ValidationError("Consultation fee cannot be negative")
+        return fee
+
+class CustomLoginForm(AuthenticationForm):
+    """Custom login form that uses email instead of username"""
+    username = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
 
 def home(request):
     """Home page view"""
@@ -65,8 +90,8 @@ def register_user(request):
             profile.user = user
             profile.save()
             
-            # Log in user
-            login(request, user)
+            # Log in user with specified backend
+            login(request, user, backend='glowmeter_app.backends.EmailBackend')
             messages.success(request, "Registration successful!")
             return redirect('dashboard')
         else:
@@ -83,7 +108,7 @@ def register_user(request):
 
 def register_doctor(request):
     """Doctor registration view - only accessible to admin"""
-    if not request.user.is_admin:
+    if not request.user.is_superuser:
         messages.error(request, "You don't have permission to access this page.")
         return redirect('home')
     
@@ -92,6 +117,7 @@ def register_doctor(request):
         doctor_form = DoctorForm(request.POST)
         
         if user_form.is_valid() and doctor_form.is_valid():
+            # Create user with email as username
             user = user_form.save(commit=False)
             user.is_doctor = True
             user.save()
@@ -101,10 +127,18 @@ def register_doctor(request):
             doctor.user = user
             doctor.save()
             
-            messages.success(request, "Doctor registration successful!")
+            messages.success(request, f"Doctor registration successful! Email: {user.email}")
             return redirect('dashboard')
         else:
-            messages.error(request, "Registration failed. Please correct the errors.")
+            # Print detailed form errors
+            if not user_form.is_valid():
+                for field, errors in user_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"User Form - {field}: {error}")
+            if not doctor_form.is_valid():
+                for field, errors in doctor_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"Doctor Form - {field}: {error}")
     else:
         user_form = UserRegistrationForm()
         doctor_form = DoctorForm()
@@ -118,14 +152,14 @@ def register_doctor(request):
 def login_view(request):
     """Login view for both users and doctors"""
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = CustomLoginForm(request, data=request.POST)
         if form.is_valid():
-            email = form.cleaned_data.get('username')
+            email = form.cleaned_data.get('username')  # AuthenticationForm uses username field for email
             password = form.cleaned_data.get('password')
-            user = authenticate(request, email=email, password=password)
+            user = authenticate(request, username=email, password=password)
             
             if user is not None:
-                login(request, user)
+                login(request, user, backend='glowmeter_app.backends.EmailBackend')
                 messages.success(request, f"Welcome back, {user.email}!")
                 return redirect('dashboard')
             else:
@@ -133,7 +167,7 @@ def login_view(request):
         else:
             messages.error(request, "Invalid email or password.")
     else:
-        form = AuthenticationForm()
+        form = CustomLoginForm()
     
     return render(request, 'login.html', {'form': form})
 
@@ -145,7 +179,8 @@ def dashboard(request):
     if user.is_admin:
         # Get counts for statistics
         users_count = User.objects.filter(is_doctor=False, is_admin=False).count()
-        doctors = Doctor.objects.all()
+        doctors = Doctor.objects.all().select_related('user')  # Get all doctors with their user info
+        doctors_count = doctors.count()
         consultations_count = Consultation.objects.count()
         products_count = Product.objects.count()
         
@@ -162,7 +197,7 @@ def dashboard(request):
                 'message': f"New user registered: {user.first_name} {user.last_name}"
             })
         
-        # Recent consultations - using started_at instead of created_at
+        # Recent consultations
         recent_consultations = Consultation.objects.order_by('-started_at')[:5]
         for consultation in recent_consultations:
             recent_activities.append({
@@ -189,6 +224,7 @@ def dashboard(request):
         context = {
             'users_count': users_count,
             'doctors': doctors,
+            'doctors_count': doctors_count,
             'consultations_count': consultations_count,
             'products_count': products_count,
             'recent_activities': recent_activities,
@@ -244,13 +280,18 @@ class RegularUserProfileEditForm(forms.ModelForm):
         }
 
 class DoctorProfileEditForm(forms.ModelForm):
-    """Form for editing doctor profile information"""
+    """Form for editing doctor profile"""
     class Meta:
         model = Doctor
-        fields = ('full_name', 'specialty', 'bio', 'profile_picture', 'is_available')
+        fields = ('profile_picture', 'specialization', 'qualification', 'experience_years', 'consultation_fee', 'gpay_id', 'is_available')
         widgets = {
             'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'bio': forms.Textarea(attrs={'rows': 5}),
+            'specialization': forms.TextInput(attrs={'class': 'form-control'}),
+            'qualification': forms.TextInput(attrs={'class': 'form-control'}),
+            'experience_years': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'consultation_fee': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.01'}),
+            'gpay_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'is_available': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
 
 class AdminProfileEditForm(forms.ModelForm):
@@ -344,7 +385,7 @@ def start_consultation(request, doctor_id):
     doctor = Doctor.objects.get(id=doctor_id)
     user = request.user
     
-    # Check if there's already an active consultation between the user and the doctor
+    # Check if there's already an active consultation
     existing_consultation = Consultation.objects.filter(
         user=user, 
         doctor=doctor, 
@@ -352,20 +393,54 @@ def start_consultation(request, doctor_id):
     ).first()
     
     if existing_consultation:
-        consultation = existing_consultation
+        # If there's an active consultation, check if payment is completed
+        if hasattr(existing_consultation, 'payment') and existing_consultation.payment.status == 'completed':
+            return redirect('consultation', consultation_id=existing_consultation.id)
+        else:
+            # If payment is pending, redirect to payment
+            return redirect('payment', doctor_id=doctor_id)
     else:
+        # Redirect to payment page for new consultation
+        return redirect('payment', doctor_id=doctor_id)
+
+@login_required
+def payment_view(request, doctor_id):
+    """Handle consultation payment"""
+    doctor = get_object_or_404(Doctor, id=doctor_id)
+    user = request.user
+    
+    if request.method == 'POST':
+        gpay_id = request.POST.get('gpay_id')
+        
+        # Create new consultation
         consultation = Consultation.objects.create(
             user=user,
             doctor=doctor
         )
-        # Create first message to start the conversation
+        
+        # Create payment record
+        payment = Payment.objects.create(
+            consultation=consultation,
+            amount=doctor.consultation_fee,
+            status='pending'
+        )
+        
+        # Simulate payment processing (in real app, integrate with GPay API)
+        payment.status = 'completed'
+        payment.gpay_transaction_id = f"GPAY_{int(time.time())}"
+        payment.save()
+        
+        # Create first message
         Message.objects.create(
             consultation=consultation,
             sender=user,
-            content="Hello Dr. {}, I would like to start a consultation with you.".format(doctor.full_name)
+            content=f"Hello Dr. {doctor.full_name}, I would like to start a consultation with you."
         )
+        
+        messages.success(request, "Payment successful! Starting consultation...")
+        return redirect('consultation', consultation_id=consultation.id)
     
-    return redirect('consultation', consultation_id=consultation.id)
+    return render(request, 'payment.html', {'doctor': doctor})
 
 @login_required
 def consultation_view(request, consultation_id):
@@ -658,32 +733,31 @@ def view_doctor(request, doctor_id):
     return render(request, 'view_doctor.html', context)
 
 @login_required
-@user_passes_test(lambda u: u.is_superuser)
 def edit_doctor(request, doctor_id):
+    """Edit doctor profile"""
     doctor = get_object_or_404(Doctor, id=doctor_id)
-    user = doctor.user
-
+    
+    # Only allow the doctor to edit their own profile or admin to edit any profile
+    if not (request.user.is_admin or request.user == doctor.user):
+        messages.error(request, "You don't have permission to edit this profile.")
+        return redirect('dashboard')
+    
     if request.method == 'POST':
-        user_form = UserForm(request.POST, instance=user)
+        user_form = UserForm(request.POST, instance=doctor.user)
         doctor_form = DoctorForm(request.POST, request.FILES, instance=doctor)
         
         if user_form.is_valid() and doctor_form.is_valid():
             user = user_form.save()
             doctor = doctor_form.save(commit=False)
             doctor.user = user
-            
-            if 'profile_picture' in request.FILES:
-                doctor.profile_picture = request.FILES['profile_picture']
-            
             doctor.save()
-            messages.success(request, 'Doctor profile updated successfully.')
+            
+            messages.success(request, 'Profile updated successfully!')
             return redirect('view_doctor', doctor_id=doctor.id)
-        else:
-            messages.error(request, 'Please correct the errors below.')
     else:
-        user_form = UserForm(instance=user)
+        user_form = UserForm(instance=doctor.user)
         doctor_form = DoctorForm(instance=doctor)
-
+    
     return render(request, 'edit_doctor.html', {
         'user_form': user_form,
         'doctor_form': doctor_form,

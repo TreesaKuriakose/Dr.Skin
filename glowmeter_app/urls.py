@@ -19,6 +19,7 @@ urlpatterns = [
     path('start-consultation/<int:doctor_id>/', views.start_consultation, name='start_consultation'),
     path('consultation/<int:consultation_id>/', views.consultation_view, name='consultation'),
     path('my-consultations/', views.my_consultations, name='my_consultations'),
+    path('payment/<int:doctor_id>/', views.payment_view, name='payment'),
     
     # Prescription URLs
     path('patients/', views.doctor_patients, name='doctor_patients'),
