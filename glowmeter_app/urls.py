@@ -11,6 +11,7 @@ urlpatterns = [
     ), name='logout'),
     path('register/', views.register_user, name='register'),
     path('register-doctor/', views.register_doctor, name='register_doctor'),
+    path('terms-and-conditions/', views.terms_and_conditions, name='terms_and_conditions'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('edit-profile/', views.edit_profile, name='edit_profile'),
     path('change-password/', views.change_password, name='change_password'),

@@ -147,8 +147,8 @@
                         </div>
                         
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="terms" required>
-                            <label class="form-check-label" for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
+                            <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                            <label class="form-check-label" for="terms">I agree to the <a href="{% url 'terms_and_conditions' %}" target="_blank">Terms and Conditions</a></label>
                         </div>
                         
                         <button type="submit" class="btn btn-primary w-100">Register</button>

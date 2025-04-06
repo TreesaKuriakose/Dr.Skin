@@ -1004,3 +1004,7 @@ def reply_feedback(request, feedback_id):
             messages.error(request, "Please provide a reply.")
     
     return redirect('view_feedbacks')
+
+def terms_and_conditions(request):
+    """View for Terms and Conditions page"""
+    return render(request, 'terms_and_conditions.html')
