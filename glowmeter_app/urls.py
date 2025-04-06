@@ -44,4 +44,7 @@ urlpatterns = [
     path('view-user/<int:user_id>/', views.view_user, name='view_user'),
     path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
     path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('feedbacks/', views.view_feedbacks, name='view_feedbacks'),
+    path('submit-feedback/', views.submit_feedback, name='submit_feedback'),
+    path('reply-feedback/<int:feedback_id>/', views.reply_feedback, name='reply_feedback'),
 ] 

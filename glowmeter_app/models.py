@@ -179,3 +179,27 @@ class Payment(models.Model):
     
     def __str__(self):
         return f"Payment for consultation {self.consultation.id} - {self.status}"
+
+class Feedback(models.Model):
+    """Feedback model for user reviews and ratings"""
+    RATING_CHOICES = [
+        (1, '1 Star'),
+        (2, '2 Stars'),
+        (3, '3 Stars'),
+        (4, '4 Stars'),
+        (5, '5 Stars'),
+    ]
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks')
+    rating = models.IntegerField(choices=RATING_CHOICES)
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    reply = models.TextField(blank=True, null=True)
+    replied_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='feedback_replies')
+    replied_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"Feedback by {self.user.get_full_name()} - {self.rating} stars"

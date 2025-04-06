@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Feedback | GLOWMETER{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feedback-card {
+        margin-bottom: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .rating-stars {
+        color: #ffc107;
+        font-size: 1.2rem;
+    }
+    
+    .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .feedback-body {
+        padding: 15px;
+    }
+    
+    .feedback-footer {
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #eee;
+    }
+    
+    .reply-section {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+    
+    .star-rating input {
+        display: none;
+    }
+    
+    .star-rating label {
+        cursor: pointer;
+        font-size: 1.5em;
+        color: #ddd;
+        padding: 0 0.1em;
+    }
+    
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: #ffd700;
+    }
+    
+    .rating-display .fas.fa-star {
+        color: #ffd700;
+    }
+    
+    .rating-display .far.fa-star {
+        color: #ddd;
+    }
+    
+    .border-left {
+        border-left: 3px solid #6c757d;
+        padding-left: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>User Feedback</h1>
+
+    {% if user.is_authenticated %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Submit Your Feedback</h2>
+            <form method="post" action="{% url 'submit_feedback' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Rating</label>
+                    <div class="star-rating">
+                        <input type="radio" id="star5" name="rating" value="5" required />
+                        <label for="star5" title="5 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star4" name="rating" value="4" />
+                        <label for="star4" title="4 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star3" name="rating" value="3" />
+                        <label for="star3" title="3 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star2" name="rating" value="2" />
+                        <label for="star2" title="2 stars"><i class="fas fa-star"></i></label>
+                        <input type="radio" id="star1" name="rating" value="1" />
+                        <label for="star1" title="1 star"><i class="fas fa-star"></i></label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="comment" class="form-label">Your Comment</label>
+                    <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Feedback</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="feedbacks-list">
+        {% for feedback in feedbacks %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="card-title">{{ feedback.user.get_full_name }}</h5>
+                    <div class="rating-display">
+                        {% for i in "12345"|make_list %}
+                            {% if forloop.counter <= feedback.rating %}
+                                <i class="fas fa-star text-warning"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                <p class="card-text">{{ feedback.comment }}</p>
+                <small class="text-muted">Posted on {{ feedback.created_at|date:"F d, Y" }}</small>
+
+                {% if feedback.reply %}
+                <div class="reply-section mt-3 border-left pl-3">
+                    <strong>Reply from {{ feedback.replied_by.get_full_name }}:</strong>
+                    <p>{{ feedback.reply }}</p>
+                    <small class="text-muted">Replied on {{ feedback.replied_at|date:"F d, Y" }}</small>
+                </div>
+                {% elif user.is_staff or user.is_doctor %}
+                <form method="post" action="{% url 'reply_feedback' feedback.id %}" class="mt-3">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <textarea class="form-control" name="reply" rows="2" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-secondary mt-2">Reply</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+            No feedback yet. Be the first to share your experience!
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h3>Feedback Statistics</h3>
+            <div class="text-center">
+                <h1 class="display-4">{{ average_rating|default:"0.0" }}</h1>
+                <p class="text-muted">Based on {{ feedbacks|length }} reviews</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

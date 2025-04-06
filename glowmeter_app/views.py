@@ -2,11 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from .models import User, Doctor, RegularUser, Consultation, Message, Product, Prescription, PrescriptionItem, DoctorAvailability, Payment
+from .models import User, Doctor, RegularUser, Consultation, Message, Product, Prescription, PrescriptionItem, DoctorAvailability, Payment, Feedback
 from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django import forms
 import time
 import re
+from django.http import JsonResponse
+from django.utils import timezone
 
 class UserRegistrationForm(forms.ModelForm):
     """Form for user registration"""
@@ -946,3 +948,59 @@ def view_doctor_availability(request, doctor_id):
     }
     
     return render(request, 'doctor_availability.html', context)
+
+@login_required
+def submit_feedback(request):
+    """Handle feedback submission"""
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment')
+        
+        if rating and comment:
+            feedback = Feedback.objects.create(
+                user=request.user,
+                rating=int(rating),
+                comment=comment
+            )
+            messages.success(request, "Thank you for your feedback!")
+        else:
+            messages.error(request, "Please provide both rating and comment.")
+        
+    return redirect('view_feedbacks')
+
+@login_required
+def view_feedbacks(request):
+    """Display all feedbacks"""
+    feedbacks = Feedback.objects.all().order_by('-created_at')
+    
+    # Calculate average rating
+    total_rating = sum(feedback.rating for feedback in feedbacks)
+    average_rating = total_rating / len(feedbacks) if feedbacks else 0
+    
+    context = {
+        'feedbacks': feedbacks,
+        'average_rating': round(average_rating, 1)
+    }
+    return render(request, 'feedbacks.html', context)
+
+@login_required
+def reply_feedback(request, feedback_id):
+    """Handle replies to feedback"""
+    if not (request.user.is_staff or request.user.is_doctor):
+        messages.error(request, "You don't have permission to reply to feedback.")
+        return redirect('view_feedbacks')
+    
+    feedback = get_object_or_404(Feedback, id=feedback_id)
+    
+    if request.method == 'POST':
+        reply = request.POST.get('reply')
+        if reply:
+            feedback.reply = reply
+            feedback.replied_by = request.user
+            feedback.replied_at = timezone.now()
+            feedback.save()
+            messages.success(request, "Reply posted successfully!")
+        else:
+            messages.error(request, "Please provide a reply.")
+    
+    return redirect('view_feedbacks')
