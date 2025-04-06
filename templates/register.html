@@ -11,7 +11,7 @@
                     <h2>{% if user_type == 'doctor' %}Register New Doctor{% else %}Register{% endif %}</h2>
                 </div>
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" id="registrationForm">
                         {% csrf_token %}
                         
                         <div class="row">
@@ -50,12 +50,26 @@
                                 
                                 <div class="mb-3">
                                     <label for="{{ user_form.password.id_for_label }}" class="form-label">Password</label>
-                                    <input type="password" name="{{ user_form.password.html_name }}" id="{{ user_form.password.id_for_label }}" class="form-control {% if user_form.password.errors %}is-invalid{% endif %}" required>
+                                    <input type="password" name="{{ user_form.password.html_name }}" id="{{ user_form.password.id_for_label }}" 
+                                           class="form-control {% if user_form.password.errors %}is-invalid{% endif %}" 
+                                           required
+                                           pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+                                           title="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character">
                                     {% if user_form.password.errors %}
                                         <div class="invalid-feedback">
                                             {{ user_form.password.errors }}
                                         </div>
                                     {% endif %}
+                                    <div class="password-requirements mt-2">
+                                        <small class="text-muted">Password must contain:</small>
+                                        <ul class="list-unstyled">
+                                            <li id="length-check"><i class="fas fa-times text-danger"></i> At least 8 characters</li>
+                                            <li id="uppercase-check"><i class="fas fa-times text-danger"></i> One uppercase letter</li>
+                                            <li id="lowercase-check"><i class="fas fa-times text-danger"></i> One lowercase letter</li>
+                                            <li id="number-check"><i class="fas fa-times text-danger"></i> One number</li>
+                                            <li id="special-check"><i class="fas fa-times text-danger"></i> One special character</li>
+                                        </ul>
+                                    </div>
                                 </div>
                                 
                                 <div class="mb-3">
@@ -66,6 +80,9 @@
                                             {{ user_form.confirm_password.errors }}
                                         </div>
                                     {% endif %}
+                                    <div id="password-match" class="invalid-feedback">
+                                        Passwords do not match
+                                    </div>
                                 </div>
                             </div>
                             
@@ -165,4 +182,58 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordInput = document.getElementById('{{ user_form.password.id_for_label }}');
+    const confirmPasswordInput = document.getElementById('{{ user_form.confirm_password.id_for_label }}');
+    
+    // Password validation checks
+    function validatePassword() {
+        const password = passwordInput.value;
+        
+        // Update check marks
+        document.getElementById('length-check').innerHTML = 
+            `<i class="fas fa-${password.length >= 8 ? 'check text-success' : 'times text-danger'}"></i> At least 8 characters`;
+        
+        document.getElementById('uppercase-check').innerHTML = 
+            `<i class="fas fa-${/[A-Z]/.test(password) ? 'check text-success' : 'times text-danger'}"></i> One uppercase letter`;
+        
+        document.getElementById('lowercase-check').innerHTML = 
+            `<i class="fas fa-${/[a-z]/.test(password) ? 'check text-success' : 'times text-danger'}"></i> One lowercase letter`;
+        
+        document.getElementById('number-check').innerHTML = 
+            `<i class="fas fa-${/\d/.test(password) ? 'check text-success' : 'times text-danger'}"></i> One number`;
+        
+        document.getElementById('special-check').innerHTML = 
+            `<i class="fas fa-${/[@$!%*?&]/.test(password) ? 'check text-success' : 'times text-danger'}"></i> One special character`;
+    }
+    
+    // Check if passwords match
+    function validatePasswordMatch() {
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        
+        if (password === confirmPassword) {
+            confirmPasswordInput.classList.remove('is-invalid');
+            document.getElementById('password-match').style.display = 'none';
+        } else {
+            confirmPasswordInput.classList.add('is-invalid');
+            document.getElementById('password-match').style.display = 'block';
+        }
+    }
+    
+    // Add event listeners
+    passwordInput.addEventListener('input', validatePassword);
+    confirmPasswordInput.addEventListener('input', validatePasswordMatch);
+    passwordInput.addEventListener('input', validatePasswordMatch);
+    
+    // Initial validation
+    validatePassword();
+    validatePasswordMatch();
+});
+</script>
+{% endblock %}
+
 {% endblock %} 

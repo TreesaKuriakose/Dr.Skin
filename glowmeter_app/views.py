@@ -12,8 +12,16 @@ from django.utils import timezone
 
 class UserRegistrationForm(forms.ModelForm):
     """Form for user registration"""
-    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
-    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Confirm Password'}))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Password',
+        'pattern': '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$',
+        'title': 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character'
+    }))
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Confirm Password'
+    }))
     
     class Meta:
         model = User
@@ -23,6 +31,20 @@ class UserRegistrationForm(forms.ModelForm):
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'}),
         }
+    
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if len(password) < 8:
+            raise forms.ValidationError("Password must be at least 8 characters long")
+        if not any(char.isupper() for char in password):
+            raise forms.ValidationError("Password must contain at least one uppercase letter")
+        if not any(char.islower() for char in password):
+            raise forms.ValidationError("Password must contain at least one lowercase letter")
+        if not any(char.isdigit() for char in password):
+            raise forms.ValidationError("Password must contain at least one number")
+        if not any(char in "!@#$%^&*(),.?\":{}|<>" for char in password):
+            raise forms.ValidationError("Password must contain at least one special character")
+        return password
     
     def clean_confirm_password(self):
         password = self.cleaned_data.get('password')
@@ -130,7 +152,7 @@ def register_doctor(request):
             doctor.user = user
             doctor.save()
             
-            messages.success(request, f"Doctor registration successful! Email: {user.email}")
+            messages.success(request, f"Doctor registration successful! successfilly sent the password to Email: {user.email}")
             return redirect('dashboard')
         else:
             # Print detailed form errors
